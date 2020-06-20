@@ -1,0 +1,8 @@
+[user]
+	email = gillis.andrew@gmail.com
+	name = Andrew Gillis
+	signingkey = C9F30E8CE7D780BB
+[gpg]
+	program = /c/Program Files (x86)/GnuPG/bin/gpg.exe
+[commit]
+	gpgsign = true
