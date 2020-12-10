@@ -3,6 +3,6 @@
 	name = Andrew Gillis
 	signingkey = C9F30E8CE7D780BB
 [gpg]
-	program = /mnt/c/Program Files (x86)/GnuPG/bin/gpg.exe
-# [commit]
-	# gpgsign = true
+	program = /usr/bin/gpg
+[commit]
+	gpgsign = true
