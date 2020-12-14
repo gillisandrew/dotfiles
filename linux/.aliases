@@ -86,7 +86,20 @@ if [[ -x "$(command -v foo)" ]]; then
     alias ccf='codecept run functional'
 fi
 
+# -----------------------------------------------------------
+# npm helpers
+# -----------------------------------------------------------
+
+# List what (top level) packages are installed globally
 alias npm-global="npm list -g --depth 0"
+alias npm-global-list="npm ls -g --depth=0."
+
+# List what globally installed packages are outdated
+alias npm-global-outdated="npm outdated -g --depth=0."
+
+# Update outdated globally installed npm packages
+alias npm-global-update="npm update -g"
+
 # alias g="gulp"
 # alias rz="reload"
 # alias reload="source ~/.zshrc && echo \"$COL_GREEN ==> .zshrc reloaded... $COL_RESET \n \""
@@ -108,6 +121,13 @@ alias gc="git commit"
 alias gck="git checkout"
 
 alias awsp="source _awsp"
+
+alias tf="terraform"
+alias tfw="terraform workspace"
+alias tfwl="terraform workspace list"
+alias tfws="terraform workspace select"
+alias tfa="terraform apply"
+alias tfd="terraform destroy"
 
 alias reinit="clean && init"
 alias rm_rf_node_modules="find . -name 'node_modules' -type d -prune -exec rm -rf '{}' +"
