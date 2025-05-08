@@ -24,7 +24,7 @@ zshrc() {
 }
 
 # change time zone
-sudo ln -fs /usr/share/zoneinfo/America/Chicago /etc/localtime
+sudo ln -fs /usr/share/zoneinfo/America/New_York /etc/localtime
 sudo dpkg-reconfigure --frontend noninteractive tzdata
 
 zshrc
