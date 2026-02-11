@@ -1,0 +1,17 @@
+# Chezmoi local state
+.chezmoi.toml
+.chezmoistate.boltdb
+
+# Secret files that should never be committed
+*.age
+*.asc
+key.txt
+**/hosts.yml
+**/credentials
+**/*secret*
+**/*token*
+.env
+.env.*
+
+# OS
+.DS_Store

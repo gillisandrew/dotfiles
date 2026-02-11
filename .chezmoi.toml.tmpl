@@ -1,0 +1,6 @@
+{{- $email := promptStringOnce . "email" "Git email" -}}
+{{- $codespaces := env "CODESPACES" | not | not -}}
+
+[data]
+  email = {{ $email | quote }}
+  codespaces = {{ $codespaces }}

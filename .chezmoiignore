@@ -1,0 +1,8 @@
+install.sh
+.pre-commit-config.yaml
+.gitleaks.toml
+
+{{ if ne .chezmoi.os "darwin" }}
+.config/ghostty
+.config/zed
+{{ end }}
