@@ -1,0 +1,61 @@
+[user]
+	email = {{ .email }}
+	name = Andrew Gillis
+	{{- if eq .chezmoi.os "darwin" }}
+	signingkey = key::ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIBU9/f1kZUWBLDJmQDW5v3WQBxWi5Ijrog0HE6hOceAP
+	{{- end }}
+[init]
+	defaultBranch = main
+[core]
+	excludesfile = {{ .chezmoi.homeDir }}/.gitignore
+	{{- if eq .chezmoi.os "darwin" }}
+	editor = "code --wait"
+	{{- else }}
+	editor = vim
+	{{- end }}
+	attributesFile = {{ .chezmoi.homeDir }}/.gitattributes
+{{- if eq .chezmoi.os "darwin" }}
+[gpg]
+	format = ssh
+[commit]
+	gpgsign = true
+[tag]
+	gpgsign = true
+{{- end }}
+[pull]
+	rebase = true
+[push]
+	default = current
+	autoSetupRemote = true
+[fetch]
+	prune = true
+	prunetags = true
+[rebase]
+	autoStash = true
+	autoSquash = true  # Honor fixup!/squash! commits
+[merge]
+	conflictStyle = zdiff3
+[log]
+	date = iso
+[diff]
+	algorithm = histogram  # Generally produces better diffs
+	colorMoved = default  # Highlight moved code blocks
+	{{- if eq .chezmoi.os "darwin" }}
+	tool = vscode
+	{{- end }}
+
+[alias]
+	# Quick status
+	s = status -sb
+	# Better log views
+	lg = log --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset' --abbrev-commit
+	# Undo last commit (keeps changes staged)
+	undo = reset --soft HEAD^
+	# Amend without changing message
+	amend = commit --amend --no-edit
+	# Show what's in this branch vs main
+	new = log main..HEAD --oneline
+{{- if eq .chezmoi.os "darwin" }}
+[difftool "vscode"]
+	cmd = "code --wait --diff  "
+{{- end }}
