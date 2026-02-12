@@ -8,8 +8,9 @@ eval "$(/opt/homebrew/bin/brew shellenv)"
 {{ end -}}
 
 # Language/toolchain env
-. "$HOME/.cargo/env"
-export PATH="$PATH:$HOME/go/bin"
+export GOPATH="$HOME/.local/share/go"
+export GOBIN="$HOME/.local/bin"
+export PATH="$PATH:$GOPATH/bin"
 
 {{ if eq .chezmoi.os "darwin" -}}
 export JAVA_HOME=$(/usr/libexec/java_home)
@@ -36,8 +37,3 @@ else
 	export EDITOR='code'
 fi
 
-{{ if eq .chezmoi.os "darwin" -}}
-export PATH="$HOME/.config/herd-lite/bin:$PATH"
-export PHP_INI_SCAN_DIR="$HOME/.config/herd-lite/bin:$PHP_INI_SCAN_DIR"
-export PATH="/opt/homebrew/opt/helm@3/bin:$PATH"
-{{ end -}}
