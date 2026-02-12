@@ -1,0 +1,22 @@
+#!/bin/sh
+# Detect dotfiles target environment.
+# Source this from shell configs: . "$HOME/.local/bin/dotfiles-env"
+#
+# Exports:
+#   DOTFILES_OS  — "macos" or "linux"
+#   DOTFILES_ENV — "macos", "devcontainer", or "remote-linux"
+
+case "$(uname -s)" in
+  Darwin) DOTFILES_OS="macos" ;;
+  *)      DOTFILES_OS="linux" ;;
+esac
+
+if [ -n "${REMOTE_CONTAINERS:-}" ] || [ -n "${CODESPACES:-}" ] || [ -f /.dockerenv ]; then
+  DOTFILES_ENV="devcontainer"
+elif [ "$DOTFILES_OS" = "linux" ]; then
+  DOTFILES_ENV="remote-linux"
+else
+  DOTFILES_ENV="macos"
+fi
+
+export DOTFILES_OS DOTFILES_ENV
