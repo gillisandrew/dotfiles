@@ -1,6 +1,32 @@
-{{- $email := promptStringOnce . "email" "Git email" -}}
 {{- $codespaces := env "CODESPACES" | not | not -}}
+
+{{- $email := "" -}}
+{{- $awsEnabled := false -}}
+{{- $awsSsoSession := "" -}}
+{{- $awsSsoStartUrl := "" -}}
+{{- $awsSsoRegion := "" -}}
+{{- $awsSsoRoleName := "" -}}
+
+{{- if $codespaces -}}
+{{-   $email = coalesce (env "GIT_AUTHOR_EMAIL") (env "GIT_COMMITTER_EMAIL") "gillis.andrew@gmail.com" -}}
+{{- else -}}
+{{-   $email = promptStringOnce . "email" "Git email" -}}
+{{-   $awsEnabled = promptBoolOnce . "aws.enabled" "Enable AWS SSO config" true -}}
+{{-   if $awsEnabled -}}
+{{-     $awsSsoSession = promptStringOnce . "aws.sso_session" "AWS SSO session name" "zorg" -}}
+{{-     $awsSsoStartUrl = promptStringOnce . "aws.sso_start_url" "AWS SSO start URL" (printf "https://%s.awsapps.com/start" $awsSsoSession) -}}
+{{-     $awsSsoRegion = promptStringOnce . "aws.sso_region" "AWS SSO region" "us-east-1" -}}
+{{-     $awsSsoRoleName = promptStringOnce . "aws.sso_role_name" "AWS SSO role name" "AdministratorAccess" -}}
+{{-   end -}}
+{{- end -}}
 
 [data]
   email = {{ $email | quote }}
   codespaces = {{ $codespaces }}
+
+[data.aws]
+  enabled = {{ $awsEnabled }}
+  sso_session = {{ $awsSsoSession | quote }}
+  sso_start_url = {{ $awsSsoStartUrl | quote }}
+  sso_region = {{ $awsSsoRegion | quote }}
+  sso_role_name = {{ $awsSsoRoleName | quote }}

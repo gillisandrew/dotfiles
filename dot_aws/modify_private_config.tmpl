@@ -1,0 +1,21 @@
+#!/bin/bash
+# modify script for ~/.aws/config
+# If the file already has content (e.g. from refresh-zorg-profiles), preserve it.
+# Otherwise, seed with the base SSO session config.
+
+contents="$(cat)"
+
+if [ -n "$contents" ]; then
+  printf '%s\n' "$contents"
+else
+  cat <<'EOF'
+[default]
+cli_pager=
+
+[sso-session {{ .aws.sso_session }}]
+sso_region = {{ .aws.sso_region }}
+sso_start_url = {{ .aws.sso_start_url }}
+
+; Run 'refresh-zorg-profiles' to populate SSO account profiles.
+EOF
+fi

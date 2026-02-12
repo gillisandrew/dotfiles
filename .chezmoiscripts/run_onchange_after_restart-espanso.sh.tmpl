@@ -1,0 +1,9 @@
+{{- if eq .chezmoi.os "darwin" -}}
+#!/bin/bash
+# espanso config hash: {{ joinPath .chezmoi.sourceDir "private_dot_config/espanso/match/base.yml" | include | sha256sum }}
+# espanso defaults hash: {{ joinPath .chezmoi.sourceDir "private_dot_config/espanso/config/default.yml" | include | sha256sum }}
+if command -v espanso >/dev/null 2>&1; then
+  echo "==> Espanso config changed, restarting..."
+  espanso restart >/dev/null 2>&1 || true
+fi
+{{ end -}}

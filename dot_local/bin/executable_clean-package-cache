@@ -1,0 +1,87 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+DRY_RUN=true
+
+if [[ "${1:-}" == "--force" ]]; then
+  DRY_RUN=false
+fi
+
+echo "Package cache cleanup"
+echo "Dry run: $DRY_RUN"
+echo
+
+run_cmd() {
+  local desc="$1"
+  shift
+  local cmd=("$@")
+
+  echo "→ $desc"
+  echo "  ${cmd[*]}"
+  echo
+
+  if [[ "$DRY_RUN" == false ]]; then
+    "${cmd[@]}" || echo "  ⚠️  Command failed (continuing)"
+  fi
+}
+
+command_exists() {
+  command -v "$1" >/dev/null 2>&1
+}
+
+# ------------------------
+# Node Ecosystem
+# ------------------------
+
+if command_exists npm; then
+  run_cmd "npm cache clean" npm cache clean --force
+fi
+
+if command_exists yarn; then
+  run_cmd "yarn cache clean" yarn cache clean
+fi
+
+if command_exists pnpm; then
+  run_cmd "pnpm store prune" pnpm store prune
+fi
+
+# ------------------------
+# Python Ecosystem
+# ------------------------
+
+if command_exists pip; then
+  run_cmd "pip cache purge" pip cache purge
+fi
+
+if command_exists pip3; then
+  run_cmd "pip3 cache purge" pip3 cache purge
+fi
+
+if command_exists uv; then
+  run_cmd "uv cache clean" uv cache clean
+fi
+
+if command_exists poetry; then
+  run_cmd "poetry cache clear" poetry cache clear --all pypi
+fi
+
+# ------------------------
+# Terraform
+# ------------------------
+
+if command_exists terraform; then
+  run_cmd "Terraform plugin cache (manual removal)" \
+    bash -c 'rm -rf "${TF_PLUGIN_CACHE_DIR:-$HOME/.terraform.d/plugin-cache}"'
+fi
+
+# ------------------------
+# Go
+# ------------------------
+
+if command_exists go; then
+  run_cmd "Go module cache clean" go clean -modcache
+fi
+
+# ------------------------
+# Cargo

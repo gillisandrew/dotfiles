@@ -1,0 +1,65 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+# Default: dry run
+DRY_RUN=true
+
+if [[ "${1:-}" == "--force" ]]; then
+  DRY_RUN=false
+fi
+
+echo "Starting cleanup..."
+echo "Dry run: $DRY_RUN"
+echo
+
+# Directories commonly safe to delete
+TARGET_DIRS=(
+  "node_modules"
+  "dist"
+  "build"
+  ".next"
+  ".nuxt"
+  ".cache"
+  ".parcel-cache"
+  ".terraform"
+  ".venv"
+  "venv"
+  "__pycache__"
+  ".pytest_cache"
+  ".mypy_cache"
+  ".tox"
+  ".gradle"
+  "target"
+  "coverage"
+)
+
+# Build find expression dynamically
+FIND_EXPR=()
+for dir in "${TARGET_DIRS[@]}"; do
+  FIND_EXPR+=( -name "$dir" -o )
+done
+
+# Remove trailing -o
+unset 'FIND_EXPR[${#FIND_EXPR[@]}-1]'
+
+# Find matching directories
+while IFS= read -r -d '' path; do
+  echo "Found: $path"
+  if [[ "$DRY_RUN" == false ]]; then
+    rm -rf "$path"
+  fi
+done < <(
+  find . \
+    -type d \
+    \( "${FIND_EXPR[@]}" \) \
+    -not -path "*/.git/*" \
+    -print0
+)
+
+echo
+if [[ "$DRY_RUN" == true ]]; then
+  echo "Dry run complete. Re-run with --force to delete."
+else
+  echo "Cleanup complete."
+fi

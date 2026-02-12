@@ -1,0 +1,125 @@
+#!/bin/bash
+
+# promote-note - Promote a draft note to the notes directory with path updates
+# Usage: promote-note "note title"
+# Must be run from the root of a notes repository
+
+promote_note() {
+    local note_name="$1"
+    
+    if [[ -z "$note_name" ]]; then
+        echo "Usage: promote-note 'note title'"
+        echo "Example: promote-note 'VPC Lattice proxy patterns'"
+        echo ""
+        echo "Must be run from the root of a notes repository containing drafts/ and notes/ directories"
+        return 1
+    fi
+    
+    # Verify we're in the right directory structure
+    if [[ ! -d "drafts" ]] || [[ ! -d "notes" ]]; then
+        echo "Error: Must be run from a directory containing 'drafts/' and 'notes/' subdirectories"
+        echo "Current directory: $(pwd)"
+        return 1
+    fi
+    
+    local draft_file="drafts/${note_name}.md"
+    local notes_file="notes/${note_name}.md"
+    
+    # Check if draft file exists
+    if [[ ! -f "$draft_file" ]]; then
+        echo "Error: Draft file '$draft_file' not found"
+        return 1
+    fi
+    
+    # Check if notes file already exists
+    if [[ -f "$notes_file" ]]; then
+        echo "Error: File '$notes_file' already exists in notes directory"
+        return 1
+    fi
+    
+    echo "Promoting note: $note_name"
+    echo "From: $draft_file"
+    echo "To: $notes_file"
+    
+    # Copy the file to notes directory
+    if ! cp "$draft_file" "$notes_file"; then
+        echo "Error: Failed to copy file to notes directory"
+        return 1
+    fi
+    
+    # URL-encode the note name for path matching (spaces become %20)
+    local encoded_name="${note_name// /%20}"
+    
+    echo "Searching for references to update..."
+    
+    local updated_count=0
+    
+    # Find files in drafts that reference this note with ./
+    if grep -r -l --include="*.md" "\\./${note_name}\\.md\\|\\./${encoded_name}\\.md\\|\\[.*\\]: \\./${encoded_name}\\.md" drafts/ 2>/dev/null; then
+        echo "Found references in drafts directory, updating..."
+        grep -r -l --include="*.md" "\\./${note_name}\\.md\\|\\./${encoded_name}\\.md\\|\\[.*\\]: \\./${encoded_name}\\.md" drafts/ 2>/dev/null | \
+        while read -r file; do
+            echo "  Updating: $file"
+            # Update inline links from ./ to ../notes/
+            sed -i '' "s|\\./${note_name}\\.md|../notes/${note_name}.md|g" "$file"
+            sed -i '' "s|\\./${encoded_name}\\.md|../notes/${encoded_name}.md|g" "$file"
+            # Update reference-style link definitions
+            sed -i '' "s|\\[\\([^]]*\\)\\]: \\./${encoded_name}\\.md|[\\1]: ../notes/${encoded_name}.md|g" "$file"
+            ((updated_count++))
+        done
+    fi
+    
+    # Search in notes directory for references (these should already be correct but check)
+    if grep -r -l --include="*.md" "\\./${note_name}\\.md\\|\\./${encoded_name}\\.md" notes/ 2>/dev/null; then
+        echo "Found references in notes directory (should be correct):"
+        grep -r -l --include="*.md" "\\./${note_name}\\.md\\|\\./${encoded_name}\\.md" notes/ 2>/dev/null | \
+        while read -r file; do
+            echo "  Reference already correct in: $file"
+        done
+    fi
+    
+    # Search in reports directory for references
+    if [[ -d "reports" ]]; then
+        if grep -r -l --include="*.md" "\\.\\./notes/${note_name}\\.md\\|\\.\\./notes/${encoded_name}\\.md" reports/ 2>/dev/null; then
+            echo "Found references in reports directory (should be correct):"
+            grep -r -l --include="*.md" "\\.\\./notes/${note_name}\\.md\\|\\.\\./notes/${encoded_name}\\.md" reports/ 2>/dev/null | \
+            while read -r file; do
+                echo "  Reference already correct in: $file"
+            done
+        fi
+    fi
+    
+    # Remove the original draft file
+    echo "Removing original draft file..."
+    if rm "$draft_file"; then
+        echo "Successfully promoted '$note_name' from drafts to notes"
+        echo "Removed original draft file"
+    else
+        echo "Warning: Failed to remove original draft file '$draft_file'"
+        echo "Note was copied successfully but manual cleanup needed"
+        return 1
+    fi
+    
+    # Summary
+    echo ""
+    echo "Promotion complete!"
+    echo "- Note moved from drafts/ to notes/"
+    if [[ $updated_count -gt 0 ]]; then
+        echo "- Updated $updated_count files with path references"
+    else
+        echo "- No path references needed updating"
+    fi
+    echo "- Original draft file removed"
+    
+    # Verify the new file exists
+    if [[ -f "$notes_file" ]]; then
+        echo "- New file verified at: $notes_file"
+    else
+        echo "- Warning: Could not verify new file at: $notes_file"
+    fi
+}
+
+# If called directly (not sourced), execute the function with all arguments
+if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
+    promote_note "$@"
+fi
