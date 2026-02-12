@@ -5,6 +5,9 @@
 # - otherwise -> .zshenv (minimal, universal env only)
 # Example: export LANG="en_US.UTF-8"
 
-# Use XDG path for espanso config
-export ESPANSO_CONFIG_DIR="$HOME/.config/espanso"
+. "$HOME/.local/bin/dotfiles-env"
 
+# Use XDG path for espanso config (macOS-only app)
+if [ "$DOTFILES_ENV" = "macos" ]; then
+  export ESPANSO_CONFIG_DIR="$HOME/.config/espanso"
+fi
