@@ -1,7 +1,0 @@
-{{- if and (eq .chezmoi.os "darwin") (not .codespaces) -}}
-#!/bin/bash
-# Install gum (charmbracelet/gum) for styled CLI output in managed scripts.
-if ! command -v gum >/dev/null 2>&1; then
-  brew install gum
-fi
-{{ end -}}
