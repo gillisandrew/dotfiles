@@ -1,3 +1,43 @@
+## .zprofile: login shell setup
+# Runs once for login shells. Put environment and PATH here.
+# Good: PATH tweaks, JAVA_HOME, pnpm/go/cargo, EDITOR defaults.
+# Avoid: prompt, aliases, completions, or interactive tooling.
+
 {{ if eq .chezmoi.os "darwin" -}}
 eval "$(/opt/homebrew/bin/brew shellenv)"
+{{ end -}}
+
+# Language/toolchain env
+. "$HOME/.cargo/env"
+export PATH="$PATH:$HOME/go/bin"
+
+{{ if eq .chezmoi.os "darwin" -}}
+export JAVA_HOME=$(/usr/libexec/java_home)
+{{ end -}}
+
+# pnpm
+{{ if eq .chezmoi.os "darwin" -}}
+export PNPM_HOME="$HOME/Library/pnpm"
+{{ else -}}
+export PNPM_HOME="$HOME/.local/share/pnpm"
+{{ end -}}
+case ":$PATH:" in
+	*":$PNPM_HOME:"*) ;;
+	*) export PATH="$PNPM_HOME:$PATH" ;;
+esac
+
+# Common user bins
+[ -d "$HOME/.local/bin" ] && export PATH="$HOME/.local/bin:$PATH"
+
+# Preferred editor for local and remote sessions
+if [[ -n $SSH_CONNECTION ]]; then
+	export EDITOR='vim'
+else
+	export EDITOR='code'
+fi
+
+{{ if eq .chezmoi.os "darwin" -}}
+export PATH="$HOME/.config/herd-lite/bin:$PATH"
+export PHP_INI_SCAN_DIR="$HOME/.config/herd-lite/bin:$PHP_INI_SCAN_DIR"
+export PATH="/opt/homebrew/opt/helm@3/bin:$PATH"
 {{ end -}}

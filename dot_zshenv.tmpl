@@ -1,1 +1,7 @@
-. "$HOME/.cargo/env"
+# .zshenv is sourced by every zsh invocation (login, interactive, non-interactive).
+# Decision tree:
+# - interactive? -> .zshrc
+# - login? -> .zprofile
+# - otherwise -> .zshenv (minimal, universal env only)
+# Example: export LANG="en_US.UTF-8"
+
