@@ -18,7 +18,7 @@ brew "yq"
 brew "zoxide"
 
 # === Full CLI (skip in ephemeral devcontainers) ===
-unless ENV["DOTFILES_ENV"] == "devcontainer"
+unless ENV["CODESPACES"] || ENV["REMOTE_CONTAINERS"] || File.exist?("/.dockerenv")
   brew "awscli"
   brew "beads"
   brew "fx"
