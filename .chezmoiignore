@@ -2,6 +2,7 @@ install.sh
 .pre-commit-config.yaml
 .gitleaks.toml
 README.md
+docs/
 
 {{ if ne .chezmoi.os "darwin" }}
 .config/ghostty
