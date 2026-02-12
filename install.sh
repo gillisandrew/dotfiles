@@ -52,7 +52,7 @@ chezmoi init --apply gillisandrew
 # --- Install packages from Brewfile ---
 if [ -f "$HOME/.Brewfile" ]; then
   echo "==> Running brew bundle..."
-  brew bundle --file="$HOME/.Brewfile" --no-lock
+  brew bundle --file="$HOME/.Brewfile"
 else
   echo "==> No ~/.Brewfile found, skipping brew bundle"
 fi
