@@ -5,14 +5,18 @@
 
 [[ -o interactive ]] || return
 
+. "$HOME/.local/bin/dotfiles-env"
+
 autoload -Uz compinit && compinit
 
-{{ if eq .chezmoi.os "darwin" -}}
-export SSH_AUTH_SOCK="$HOME/.bitwarden-ssh-agent.sock"
-{{ end -}}
+if [ "$DOTFILES_ENV" = "macos" ]; then
+  export SSH_AUTH_SOCK="$HOME/.bitwarden-ssh-agent.sock"
+fi
 
 # Common aliases
-alias espansoconfig="code \"$HOME/.config/espanso\""
+if [ "$DOTFILES_ENV" = "macos" ]; then
+  alias espansoconfig="code \"$HOME/.config/espanso\""
+fi
 [ "$(command -v curlie)" ] && alias curl="curlie"
 [ "$(command -v bat)" ] && alias cat="bat"
 
