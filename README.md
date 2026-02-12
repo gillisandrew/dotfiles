@@ -33,7 +33,7 @@ To change answers later, edit `~/.config/chezmoi/chezmoi.toml` and run `chezmoi 
 |--------|--------|-------|
 | `~/.zshenv` | `dot_zshenv.tmpl` | Minimal env vars (sourced by every zsh invocation) |
 | `~/.zprofile` | `dot_zprofile.tmpl` | PATH and toolchain setup (login shells only) |
-| `~/.zshrc` | `dot_zshrc.tmpl` | Interactive config: prompt, aliases, completions |
+| `~/.zshrc` | `dot_zshrc.tmpl` | Interactive config: prompt, aliases, functions, completions |
 | `~/.bashrc` | `dot_bashrc` | Minimal bash config (starship, dircolors) |
 | `~/.profile` | `dot_profile` | Login shell cargo env (bash/sh) |
 
@@ -66,15 +66,29 @@ To change answers later, edit `~/.config/chezmoi/chezmoi.toml` and run `chezmoi 
 
 ### Scripts (`~/.local/bin/`)
 
-| Command | Description |
-|---------|-------------|
-| `clean-deps` | Remove build artifacts (`node_modules`, `dist`, `.venv`, etc.) from current tree. Dry-run by default; pass `--force` to delete. |
-| `clean-package-cache` | Purge caches for npm, pip, uv, go, cargo, terraform, and more. Dry-run by default; pass `--force` to execute. |
-| `generate-reference-links` | Scan markdown for `[[wiki-links]]` and append reference-style link definitions for GitHub compatibility. |
-| `get-ses-prod-access-status` | Check SES production access across all AWS profiles and regions. Requires active SSO session. |
-| `promote-note` | Move a draft note from `drafts/` to `notes/`, updating cross-references in other files. |
-| `refresh-zorg-profiles` | Log into AWS SSO, enumerate org accounts, and regenerate `~/.aws/config` with a profile per account. *(template)* |
-| `starship-claude` | Starship-based status line for Claude Code sessions. |
+| Command | Verb | Description |
+|---------|------|-------------|
+| `clean-deps` | `clean` | Remove build artifacts (`node_modules`, `dist`, `.venv`, etc.) from current tree. Dry-run by default; pass `--force` to delete. |
+| `clean-package-cache` | `clean` | Purge caches for npm, pip, uv, go, cargo, terraform, and more. Dry-run by default; pass `--force` to execute. |
+| `generate-reference-links` | `generate` | Scan markdown for `[[wiki-links]]` and append reference-style link definitions for GitHub compatibility. |
+| `get-ses-prod-access-status` | `get` | Check SES production access across all AWS profiles and regions. Requires active SSO session. |
+| `promote-note` | `promote` | Move a draft note from `drafts/` to `notes/`, updating cross-references in other files. |
+| `refresh-zorg-profiles` | `refresh` | Log into AWS SSO, enumerate org accounts, and regenerate `~/.aws/config` with a profile per account. *(template)* |
+| `starship-claude` | — | Starship-based status line for Claude Code sessions. Not a verb-noun command; this is a tool integration. |
+
+### Inline functions (`.zshrc`)
+
+| Function | Verb | Description |
+|----------|------|-------------|
+| `extract()` | `extract` | Unpack any common archive format (tar, zip, rar, 7z, gz, bz2). |
+| `refresh_github_token()` | `refresh` | Update a GitHub token in a `~/.local/env/` file using `gh auth token`. |
+| `curl_harder()` | — | Resilient `curl` wrapper with infinite retry. Utility; not a verb-noun command. |
+
+### Aliases (`.zshrc`)
+
+| Alias | Expands to |
+|-------|------------|
+| `espansoconfig` | `code "$HOME/.config/espanso"` |
 
 ### Lifecycle scripts (`.chezmoiscripts/`)
 
@@ -133,13 +147,37 @@ flowchart TD
 
 ## Naming conventions
 
-### File names
+### Approved verbs
+
+Scripts and functions use a standard set of verbs as their first word. This keeps naming predictable and makes commands discoverable.
+
+| Verb | Meaning | Use when... |
+|------|---------|-------------|
+| `get` | Query and display information (read-only) | Fetching status, printing reports |
+| `set` | Write or configure a value | Updating a setting or state |
+| `clean` | Remove generated artifacts or caches | Freeing disk space, resetting build state |
+| `refresh` | Regenerate from an upstream source of truth | Token rotation, SSO profile sync |
+| `generate` | Produce new output from input | Transforming files, creating derived content |
+| `promote` | Move to a higher-priority state | Draft-to-published workflows |
+| `extract` | Unpack a compressed archive | Decompressing tarballs, zips |
+| `sync` | Bidirectional reconciliation | *(reserved for future use)* |
+
+Names that don't fit the verb-noun pattern (tool integrations, utilities) are fine — just note the exception in the table above.
+
+### Command names
 
 | Context | Convention | Examples |
 |---------|-----------|----------|
-| Commands in `~/.local/bin/` | `kebab-case` | `clean-deps`, `promote-note` |
-| Chezmoi source prefixes | Per chezmoi spec | `dot_`, `private_`, `executable_`, `modify_`, `run_once_after_` |
-| Chezmoi source suffixes | `.tmpl` for templates | `dot_zshrc.tmpl`, `modify_private_config.tmpl` |
+| Scripts in `~/.local/bin/` | `verb-noun` in `kebab-case` | `clean-deps`, `get-ses-prod-access-status` |
+| Inline shell functions | `verb_noun` in `snake_case` | `refresh_github_token()`, `extract()` |
+| Aliases | short mnemonic | `espansoconfig` |
+
+### Chezmoi source files
+
+| Attribute | Convention | Examples |
+|-----------|-----------|----------|
+| Prefixes | Per chezmoi spec | `dot_`, `private_`, `executable_`, `modify_`, `run_once_after_` |
+| Suffixes | `.tmpl` for templates | `dot_zshrc.tmpl`, `modify_private_config.tmpl` |
 
 ### Shell code (inside scripts)
 
