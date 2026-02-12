@@ -11,6 +11,8 @@ else
   cat <<'EOF'
 [default]
 cli_pager=
+output=json
+region=us-east-1
 
 [sso-session {{ .aws.sso_session }}]
 sso_region = {{ .aws.sso_region }}

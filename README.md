@@ -23,6 +23,8 @@ On first run, chezmoi will prompt for:
 
 To change answers later, edit `~/.config/chezmoi/chezmoi.toml` and run `chezmoi apply`.
 
+On macOS, `chezmoi apply` also installs [`gum`](https://github.com/charmbracelet/gum) via Homebrew (if not already present). Scripts use gum for styled output, spinners, confirmation prompts, and tables — but all gracefully fall back to plain text when gum is unavailable.
+
 **GitHub Codespaces:** Automatic — GitHub clones repos named `dotfiles` and runs `install.sh`. All prompts are skipped; AWS is disabled; email is read from `GIT_AUTHOR_EMAIL`.
 
 ## What's managed
@@ -94,6 +96,7 @@ To change answers later, edit `~/.config/chezmoi/chezmoi.toml` and run `chezmoi 
 
 | Script | Trigger | Behavior |
 |--------|---------|----------|
+| `run_once_before_install-gum.sh.tmpl` | First `chezmoi apply` | Installs `gum` via Homebrew for styled CLI output. macOS only; skipped in Codespaces. |
 | `run_once_after_setup-aws-sso.sh.tmpl` | First `chezmoi apply` | Prints reminder to run `refresh-zorg-profiles` if no profiles exist. Disabled in Codespaces or when AWS is off. |
 | `run_onchange_after_restart-espanso.sh.tmpl` | Espanso config changes | Restarts espanso when `base.yml` or `default.yml` change. macOS only. |
 
@@ -212,6 +215,7 @@ Names that don't fit the verb-noun pattern (tool integrations, utilities) are fi
 | **`promptStringOnce`** | Chezmoi template function that prompts the user once during `chezmoi init` and caches the answer in `chezmoi.toml`. |
 | **`.chezmoiscripts/`** | Directory for lifecycle scripts that don't create corresponding directories in the target. |
 | **`.chezmoiignore`** | Patterns for files in the source that chezmoi should not manage. Supports templates for conditional ignoring. |
+| **`gum`** | [charmbracelet/gum](https://github.com/charmbracelet/gum) — a CLI tool for styled output (`log`, `style`), spinners (`spin`), confirmation prompts (`confirm`), and tables (`table`). Bootstrapped via `run_once_before_install-gum.sh.tmpl`; all scripts fall back to plain text when gum is absent. |
 
 ## Daily workflow
 

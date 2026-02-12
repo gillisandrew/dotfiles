@@ -2,32 +2,54 @@
 
 set -euo pipefail
 
-DRY_RUN=true
+# --- gum helpers ---
+has_gum() { command -v gum >/dev/null 2>&1; }
+log_info()  { if has_gum; then gum log --level info  "$@"; else echo "[INFO]  $*"; fi; }
+log_warn()  { if has_gum; then gum log --level warn  "$@"; else echo "[WARN]  $*"; fi; }
 
+confirm_or_force() {
+  local prompt="$1"
+  if [[ "$FORCE" == true ]]; then return 0; fi
+  if has_gum && [[ -t 0 ]]; then gum confirm "$prompt"; return $?; fi
+  return 1
+}
+
+spin() {
+  local title="$1"; shift
+  if has_gum && [[ -t 1 ]]; then
+    gum spin --spinner dot --title "$title" -- "$@"
+  else
+    echo "$title"; "$@"
+  fi
+}
+
+command_exists() {
+  command -v "$1" >/dev/null 2>&1
+}
+
+FORCE=false
 if [[ "${1:-}" == "--force" ]]; then
-  DRY_RUN=false
+  FORCE=true
 fi
 
-echo "Package cache cleanup"
-echo "Dry run: $DRY_RUN"
-echo
+log_info "Package cache cleanup"
+
+if [[ "$FORCE" == false ]]; then
+  if ! confirm_or_force "Purge all package caches?"; then
+    log_info "Dry run — re-run with --force to execute"
+  fi
+fi
 
 run_cmd() {
   local desc="$1"
   shift
   local cmd=("$@")
 
-  echo "→ $desc"
-  echo "  ${cmd[*]}"
-  echo
+  log_info "$desc: ${cmd[*]}"
 
-  if [[ "$DRY_RUN" == false ]]; then
-    "${cmd[@]}" || echo "  ⚠️  Command failed (continuing)"
+  if [[ "$FORCE" == true ]]; then
+    spin "$desc" "${cmd[@]}" || log_warn "Command failed (continuing)"
   fi
-}
-
-command_exists() {
-  command -v "$1" >/dev/null 2>&1
 }
 
 # ------------------------
@@ -85,3 +107,14 @@ fi
 
 # ------------------------
 # Cargo
+# ------------------------
+
+if command_exists cargo; then
+  run_cmd "cargo cache clean" cargo cache --autoclean
+fi
+
+if [[ "$FORCE" == true ]]; then
+  log_info "Cleanup complete."
+else
+  log_info "Dry run complete. Re-run with --force to delete."
+fi

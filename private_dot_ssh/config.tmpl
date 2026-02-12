@@ -1,0 +1,42 @@
+# =========================================
+# Global defaults — apply to all hosts
+# =========================================
+Host *
+    # Always use SSH protocol 2
+    Protocol 2
+
+    # Only try explicitly listed keys
+    IdentitiesOnly yes
+
+{{ if eq .chezmoi.os "darwin" -}}
+    # Default identity (override per-host if needed)
+    IdentityFile ~/.ssh/BW-2026-02-10-AUTH.pub
+{{ end -}}
+    # Prefer modern key types
+    PubkeyAuthentication yes
+
+    # Disable password auth unless explicitly required
+    PasswordAuthentication no
+    KbdInteractiveAuthentication no
+    ChallengeResponseAuthentication no
+
+    # Host key verification
+    StrictHostKeyChecking ask
+    HashKnownHosts yes
+    VerifyHostKeyDNS yes
+
+    # Connection behavior
+    ServerAliveInterval 60
+    ServerAliveCountMax 3
+    TCPKeepAlive no
+
+    # Multiplexing (faster repeated connections)
+    ControlMaster auto
+    ControlPersist 10m
+    ControlPath %d/.ssh/control-%C
+
+    # Compression (usually safe and helpful on slower links)
+    Compression yes
+
+    # Log level (raise to DEBUG temporarily if troubleshooting)
+    LogLevel VERBOSE

@@ -2,16 +2,44 @@
 
 set -euo pipefail
 
-# Default: dry run
-DRY_RUN=true
+# --- gum helpers ---
+has_gum() { command -v gum >/dev/null 2>&1; }
+log_info()  { if has_gum; then gum log --level info  "$@"; else echo "[INFO]  $*"; fi; }
+log_warn()  { if has_gum; then gum log --level warn  "$@"; else echo "[WARN]  $*"; fi; }
 
+confirm_or_force() {
+  local prompt="$1"
+  if [[ "$FORCE" == true ]]; then return 0; fi
+  if has_gum && [[ -t 0 ]]; then gum confirm "$prompt"; return $?; fi
+  return 1
+}
+
+spin() {
+  local title="$1"; shift
+  if has_gum && [[ -t 1 ]]; then
+    gum spin --spinner dot --title "$title" -- "$@"
+  else
+    echo "$title"; "$@"
+  fi
+}
+
+FORCE=false
 if [[ "${1:-}" == "--force" ]]; then
-  DRY_RUN=false
+  FORCE=true
 fi
 
-echo "Starting cleanup..."
-echo "Dry run: $DRY_RUN"
-echo
+# --- Prefer kondo when available ---
+if command -v kondo >/dev/null 2>&1; then
+  if [[ "$FORCE" == true ]]; then
+    kondo --all
+  else
+    kondo
+  fi
+  exit $?
+fi
+
+# --- Fallback: find-based cleanup ---
+log_info "kondo not found, using built-in cleanup"
 
 # Directories commonly safe to delete
 TARGET_DIRS=(
@@ -43,12 +71,10 @@ done
 # Remove trailing -o
 unset 'FIND_EXPR[${#FIND_EXPR[@]}-1]'
 
-# Find matching directories
+# Collect all matching paths into an array
+FOUND_PATHS=()
 while IFS= read -r -d '' path; do
-  echo "Found: $path"
-  if [[ "$DRY_RUN" == false ]]; then
-    rm -rf "$path"
-  fi
+  FOUND_PATHS+=("$path")
 done < <(
   find . \
     -type d \
@@ -57,9 +83,23 @@ done < <(
     -print0
 )
 
-echo
-if [[ "$DRY_RUN" == true ]]; then
-  echo "Dry run complete. Re-run with --force to delete."
+if [[ ${#FOUND_PATHS[@]} -eq 0 ]]; then
+  log_info "No matching directories found."
+  exit 0
+fi
+
+# Show what was found
+for path in "${FOUND_PATHS[@]}"; do
+  log_info "Found: $path"
+done
+
+log_info "Total: ${#FOUND_PATHS[@]} directories"
+
+if confirm_or_force "Delete ${#FOUND_PATHS[@]} directories?"; then
+  for path in "${FOUND_PATHS[@]}"; do
+    spin "Removing $path..." rm -rf "$path"
+  done
+  log_info "Cleanup complete."
 else
-  echo "Cleanup complete."
+  log_info "Dry run complete. Re-run with --force to delete."
 fi

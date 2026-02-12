@@ -2,9 +2,14 @@
 #!/bin/bash
 # Prompt to populate AWS SSO profiles after first chezmoi apply.
 if [ ! -s "$HOME/.aws/config" ] || ! grep -q '\[profile ' "$HOME/.aws/config" 2>/dev/null; then
-  echo ""
-  echo "==> AWS SSO config seeded but no profiles found."
-  echo "    Run 'refresh-zorg-profiles' to log in and populate account profiles."
-  echo ""
+  MSG="AWS SSO config seeded but no profiles found.
+Run 'refresh-zorg-profiles' to log in and populate account profiles."
+  if command -v gum >/dev/null 2>&1; then
+    gum style --border double --padding "0 1" "$MSG"
+  else
+    echo ""
+    echo "==> $MSG"
+    echo ""
+  fi
 fi
 {{ end -}}

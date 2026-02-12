@@ -5,33 +5,68 @@
 
 set -euo pipefail
 
+# --- gum helpers ---
+has_gum() { command -v gum >/dev/null 2>&1; }
+
+spin() {
+  local title="$1"; shift
+  if has_gum && [[ -t 1 ]]; then
+    gum spin --spinner dot --title "$title" -- "$@"
+  else
+    "$@"
+  fi
+}
+
 REGIONS=("us-east-1" "ca-central-1")
 
 # Collect all profile names from ~/.aws/config
 PROFILES=$(awk '/^\[profile / {print $2}' ~/.aws/config | tr -d ']')
 
-# Print table header
-printf "%-20s %-15s" "PROFILE" "ACCOUNT"
+# Build CSV header
+csv="PROFILE,ACCOUNT"
 for r in "${REGIONS[@]}"; do
-    printf " %-20s" "$r"
+  csv+=",$r"
 done
-printf "\n"
 
 # Loop through profiles
 for profile in $PROFILES; do
-    account_id=$(aws sts get-caller-identity --query "Account" --output text --profile "$profile" 2>/dev/null || echo "ERROR")
+  account_id=$(spin "Fetching account ID for $profile..." \
+    aws sts get-caller-identity --query "Account" --output text --profile "$profile" 2>/dev/null || echo "ERROR")
 
-    printf "%-20s %-15s" "$profile" "$account_id"
+  row="${profile},${account_id}"
 
-    for region in "${REGIONS[@]}"; do
-        status=$(aws sesv2 get-account \
-            --region "$region" \
-            --profile "$profile" \
-            --query "ProductionAccessEnabled" \
-            --output text 2>/dev/null || echo "N/A")
+  for region in "${REGIONS[@]}"; do
+    status=$(spin "Checking SES in $region for $profile..." \
+      aws sesv2 get-account \
+        --region "$region" \
+        --profile "$profile" \
+        --query "ProductionAccessEnabled" \
+        --output text 2>/dev/null || echo "N/A")
 
-        printf " %-20s" "$status"
-    done
+    row+=",${status}"
+  done
 
-    printf "\n"
+  csv+=$'\n'"${row}"
 done
+
+# Render table
+if has_gum && [[ -t 1 ]]; then
+  echo "$csv" | gum table
+else
+  printf "%-20s %-15s" "PROFILE" "ACCOUNT"
+  for r in "${REGIONS[@]}"; do
+    printf " %-20s" "$r"
+  done
+  printf "\n"
+
+  # Skip header line in fallback rendering
+  echo "$csv" | tail -n +2 | while IFS=',' read -r profile account rest; do
+    [[ -z "$profile" ]] && continue
+    printf "%-20s %-15s" "$profile" "$account"
+    IFS=',' read -ra statuses <<< "$rest"
+    for s in "${statuses[@]}"; do
+      printf " %-20s" "$s"
+    done
+    printf "\n"
+  done
+fi

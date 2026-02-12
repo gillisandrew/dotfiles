@@ -13,6 +13,8 @@ export SSH_AUTH_SOCK="$HOME/.bitwarden-ssh-agent.sock"
 
 # Common aliases
 alias espansoconfig="code \"$HOME/.config/espanso\""
+[ "$(command -v curlie)" ] && alias curl="curlie"
+[ "$(command -v bat)" ] && alias cat="bat"
 
 extract () {
   if [ -f "$1" ] ; then

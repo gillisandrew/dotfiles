@@ -4,6 +4,11 @@
 # Usage: generate-reference-links [file.md|directory]
 # Scans for [[internal links]] and generates corresponding [link]: path definitions
 
+# --- gum helpers ---
+has_gum() { command -v gum >/dev/null 2>&1; }
+log_info()  { if has_gum; then gum log --level info  "$@"; else echo "[INFO]  $*"; fi; }
+log_warn()  { if has_gum; then gum log --level warn  "$@"; else echo "[WARN]  $*"; fi; }
+
 process_file() {
     local file="$1"
     local temp_file="${file}.tmp"
@@ -13,7 +18,7 @@ process_file() {
     internal_links=$(grep -o '\[\[[^]]*\]\]' "$file" | sed 's/\[\[\([^]]*\)\]\]/\1/' | sort -u)
     
     if [[ -z "$internal_links" ]]; then
-        echo "  No internal links found in $file"
+        log_info "No internal links found in $file"
         return 0
     fi
     
@@ -71,7 +76,7 @@ process_file() {
             esac
         else
             # File doesn't exist yet - assume it will be in drafts (common workflow)
-            echo "  Warning: Target file '${link_text}.md' not found, assuming drafts directory"
+            log_warn "Target file '${link_text}.md' not found, assuming drafts directory"
             case "$base_dir" in
                 "drafts") relative_path="./${encoded_filename}.md" ;;
                 "notes") relative_path="../drafts/${encoded_filename}.md" ;;
@@ -128,7 +133,7 @@ $reference_line"
     mv "$temp_file" "$file"
     
     local link_count=$(echo "$internal_links" | wc -l | tr -d ' ')
-    echo "  Generated $link_count reference-style links in $file"
+    log_info "Generated $link_count reference-style links in $file"
 }
 
 # Main function
@@ -137,12 +142,12 @@ main() {
     
     if [[ -f "$target" ]]; then
         # Single file mode
-        echo "Processing: $target"
+        log_info "Processing: $target"
         process_file "$target"
     elif [[ -d "$target" ]]; then
         # Directory mode
         find "$target" -name "*.md" -type f | while read -r file; do
-            echo "Processing: $file"
+            log_info "Processing: $file"
             process_file "$file"
         done
     else
