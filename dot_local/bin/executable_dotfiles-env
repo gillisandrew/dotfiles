@@ -6,6 +6,9 @@
 #   DOTFILES_OS  — "macos" or "linux"
 #   DOTFILES_ENV — "macos", "devcontainer", or "remote-linux"
 
+# Short-circuit if already sourced (zshenv → zprofile → zshrc)
+[ -n "$DOTFILES_OS" ] && return 0 2>/dev/null || true
+
 case "$(uname -s)" in
   Darwin) DOTFILES_OS="macos" ;;
   *)      DOTFILES_OS="linux" ;;
