@@ -34,6 +34,8 @@ To change answers later, edit `~/.config/chezmoi/chezmoi.toml` and run `chezmoi 
 | `~/.zshenv` | `dot_zshenv.tmpl` | Minimal env vars (sourced by every zsh invocation) |
 | `~/.zprofile` | `dot_zprofile.tmpl` | PATH and toolchain setup (login shells only) |
 | `~/.zshrc` | `dot_zshrc.tmpl` | Interactive config: prompt, aliases, completions |
+| `~/.bashrc` | `dot_bashrc` | Minimal bash config (starship, dircolors) |
+| `~/.profile` | `dot_profile` | Login shell cargo env (bash/sh) |
 
 ### Git
 
@@ -69,6 +71,7 @@ To change answers later, edit `~/.config/chezmoi/chezmoi.toml` and run `chezmoi 
 | `clean-deps` | Remove build artifacts (`node_modules`, `dist`, `.venv`, etc.) from current tree. Dry-run by default; pass `--force` to delete. |
 | `clean-package-cache` | Purge caches for npm, pip, uv, go, cargo, terraform, and more. Dry-run by default; pass `--force` to execute. |
 | `generate-reference-links` | Scan markdown for `[[wiki-links]]` and append reference-style link definitions for GitHub compatibility. |
+| `get-ses-prod-access-status` | Check SES production access across all AWS profiles and regions. Requires active SSO session. |
 | `promote-note` | Move a draft note from `drafts/` to `notes/`, updating cross-references in other files. |
 | `refresh-zorg-profiles` | Log into AWS SSO, enumerate org accounts, and regenerate `~/.aws/config` with a profile per account. *(template)* |
 | `starship-claude` | Starship-based status line for Claude Code sessions. |

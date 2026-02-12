@@ -12,7 +12,7 @@ export SSH_AUTH_SOCK="$HOME/.bitwarden-ssh-agent.sock"
 {{ end -}}
 
 # Common aliases
-alias espansoconfig="code \"$HOME/Library/Application Support/espanso\""
+alias espansoconfig="code \"$HOME/.config/espanso\""
 
 extract () {
   if [ -f "$1" ] ; then
@@ -79,16 +79,6 @@ if [ -z "$CLAUDECODE" ]; then
   [ -z "$DISABLE_ZOXIDE" ] && [ "$(command -v zoxide)" ] && eval "$(zoxide init zsh --cmd cd)"
 fi
 
-
-remove_node_modules() {
-  echo "Searching for node_modules directories..."
-  find . -name "node_modules" -type d -prune -print -exec rm -rf '{}' \;
-}
-
-remove_venvs() {
-  echo "Searching for .venv directories..."
-  find . -name ".venv" -type d -prune -print -exec rm -rf '{}' \;
-}
 
 curl_harder() {
   local count=0;

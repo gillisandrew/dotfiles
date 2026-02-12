@@ -1,0 +1,3 @@
+eval "$(starship init bash)"
+eval "$(gdircolors ~/.dircolors)"
+# eval "$(zoxide init bash --cmd cd)"
