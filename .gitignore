@@ -3,7 +3,7 @@
 .chezmoistate.boltdb
 
 # Espanso (contains PII)
-private_dot_config/espanso/match/base.yml
+private_dot_config/espanso/match/personal.yml
 
 # Secret files that should never be committed
 *.age

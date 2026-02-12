@@ -1,0 +1,146 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/espanso/espanso/dev/schemas/match.schema.json
+# espanso match file
+
+# For a complete introduction, visit the official docs at: https://espanso.org/docs/
+
+matches:
+  # Simple text replacement
+  - label: "Em dash"
+    trigger: ":m-"
+    replace: "—"
+  - label: "En dash"
+    trigger: ":n-"
+    replace: "–"
+
+  # Shebangs
+  - label: "Bash shebang"
+    trigger: ":!bash"
+    replace: "#!/usr/bin/env bash"
+  - label: "Python (uv) shebang"
+    trigger: ":!uv"
+    replace: "#!/usr/bin/env -S uv --quiet run --script"
+
+  # NOTE: espanso uses YAML to define matches, so pay attention to the indentation!
+
+  # But matches can also be dynamic:
+
+  # Print the current date
+  - label: "Date"
+    trigger: ":date"
+    replace: "{{date}}"
+    vars:
+      - name: date
+        type: date
+        params:
+          format: "%F"
+
+  - label: "Your IP"
+    trigger: ":ip"
+    replace: "{{output}}"
+    vars:
+      - name: output
+        type: shell
+        params:
+          cmd: "dig +short txt ch whoami.cloudflare @one.one.one.one | awk -F'\\\"' '{ print $2}'"
+  - label: "Pet name"
+    trigger: ":petname"
+    replace: "{{output}}"
+    vars:
+      - name: output
+        type: shell
+        params:
+          cmd: "petname -a"
+  - label: "Random string"
+    trigger: ":randstr"
+    replace: "{{output}}"
+    vars:
+      - name: output
+        type: shell
+        params:
+          cmd: "openssl rand -base64 32 | sed 's/=*$//' | tr -d '\n'"
+  - label: "Init Svelte"
+    trigger: ":init-svelte"
+    replace: "pnpm dlx sv create . && pnpm install && code ."
+  - label: "Weather (wttr)"
+    trigger: ":wttr"
+    replace: "{{output}}"
+    vars:
+      - name: output
+        type: shell
+        params:
+          cmd: "curl -s 'wttr.in/?format=3'"
+  - label: "uuid (lower)"
+    trigger: ":uuid"
+    replace: "{{output}}"
+    vars:
+      - name: output
+        type: shell
+        params:
+          cmd: "uuidgen | tr '[:upper:]' '[:lower:]'"
+  - label: "UUID (upper)"
+    trigger: ":UUID"
+    replace: "{{output}}"
+    vars:
+      - name: output
+        type: shell
+        params:
+          cmd: "uuidgen | tr '[:lower:]' '[:upper:]'"
+
+  # GitHub Search helpers
+  - label: "GitHub Search filter - exclude forks"
+    triggers:
+      - :ghs
+      - :ghs-noforks
+    replace: "fork:false"
+  - label: "GitHub Search filter - exclude archived"
+    triggers:
+      - :ghs
+      - :ghs-noarchived
+    replace: "archived:false"
+  - label: "GitHub Search filter - typescript or javascript"
+    triggers:
+      - :ghs
+      - :ghs-js
+    replace: "language:TypeScript OR language:JavaScript"
+  - label: "GitHub Search filter - python"
+    triggers:
+      - :ghs
+      - :ghs-py
+    replace: "language:Python"
+  - label: "GitHub Search filter - go"
+    triggers:
+      - :ghs
+      - :ghs-go
+    replace: "language:Go"
+  - label: "GitHub Search filter - terraform"
+    triggers:
+      - :ghs
+      - :ghs-tf
+    replace: "language:Terraform"
+  - label: "GitHub Search filter - AWS orgs"
+    triggers:
+      - :ghs
+      - :ghs-awsorgs
+    replace: "org:aws OR org:aws-ia OR org:awslabs OR org:aws-samples OR org:aws-solutions-library-samples OR org:aws-solutions OR org:aws-amplify OR org:build-on-aws OR org:aws-containers"
+
+  # Git shortcuts
+  - trigger: ":gs"
+    replace: "git status"
+
+  - trigger: ":ga"
+    replace: "git add ."
+
+  - trigger: ":gcm"
+    replace: 'git commit -m "$|$"'
+
+  - trigger: ":gom"
+    replace: "git push origin main"
+
+  - trigger: ":gmo"
+    replace: "git pull origin main"
+
+  - trigger: ":gco"
+    replace: "git checkout $|$"
+
+  - trigger: ":ccr"
+    replace: "claude --resume"
