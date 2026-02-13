@@ -17,6 +17,9 @@ export GOPATH="$HOME/.local/share/go"
 export GOBIN="$HOME/.local/bin"
 export PATH="$PATH:$GOPATH/bin"
 
+# uutils-coreutils (keg-only, provides modern GNU coreutils replacements)
+[ -d "$(brew --prefix uutils-coreutils 2>/dev/null)/libexec/uubin" ] && export PATH="$(brew --prefix uutils-coreutils)/libexec/uubin:$PATH"
+
 # Rust (rustup is keg-only; cargo env adds ~/.cargo/bin)
 [ -d "$(brew --prefix rustup 2>/dev/null)/bin" ] && export PATH="$(brew --prefix rustup)/bin:$PATH"
 [ -f "$HOME/.cargo/env" ] && . "$HOME/.cargo/env"
