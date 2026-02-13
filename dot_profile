@@ -33,10 +33,18 @@ case ":$PATH:" in
 esac
 
 # uutils-coreutils (keg-only, provides modern GNU coreutils replacements)
-[ -d "$(brew --prefix uutils-coreutils 2>/dev/null)/libexec/uubin" ] && export PATH="$(brew --prefix uutils-coreutils)/libexec/uubin:$PATH"
+if [ "$DOTFILES_OS" = "macos" ]; then
+  [ -d "/opt/homebrew/opt/uutils-coreutils/libexec/uubin" ] && export PATH="/opt/homebrew/opt/uutils-coreutils/libexec/uubin:$PATH"
+elif [ "$DOTFILES_OS" = "linux" ]; then
+  [ -d "/home/linuxbrew/.linuxbrew/opt/uutils-coreutils/libexec/uubin" ] && export PATH="/home/linuxbrew/.linuxbrew/opt/uutils-coreutils/libexec/uubin:$PATH"
+fi
 
 # Rust (rustup is keg-only; cargo env adds ~/.cargo/bin)
-[ -d "$(brew --prefix rustup 2>/dev/null)/bin" ] && export PATH="$(brew --prefix rustup)/bin:$PATH"
+if [ "$DOTFILES_OS" = "macos" ]; then
+  [ -d "/opt/homebrew/opt/rustup/bin" ] && export PATH="/opt/homebrew/opt/rustup/bin:$PATH"
+elif [ "$DOTFILES_OS" = "linux" ]; then
+  [ -d "/home/linuxbrew/.linuxbrew/opt/rustup/bin" ] && export PATH="/home/linuxbrew/.linuxbrew/opt/rustup/bin:$PATH"
+fi
 [ -f "$HOME/.cargo/env" ] && . "$HOME/.cargo/env"
 
 # Common user bins

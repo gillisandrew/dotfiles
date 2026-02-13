@@ -1,0 +1,114 @@
+#!/bin/sh
+# Lightweight motd for shell startup. Skips brew checks and external IP.
+# Run "dotfiles-motd" manually for the full version with role status.
+
+[ -n "$CLAUDECODE" ] && return 0 2>/dev/null
+
+# --- Colors ---
+_c_reset=$(printf '\033[0m')
+_c_bold=$(printf '\033[1m')
+_c_dim=$(printf '\033[2m')
+_c_cyan=$(printf '\033[36m')
+
+. "$HOME/.local/bin/dotfiles-env"
+
+# --- System info ---
+_motd_host="$(hostname -s 2>/dev/null || hostname)"
+
+if [ -n "$ZSH_VERSION" ]; then
+  _motd_shell="zsh $ZSH_VERSION"
+elif [ -n "$BASH_VERSION" ]; then
+  _motd_shell="bash $BASH_VERSION"
+else
+  _motd_shell="sh"
+fi
+
+# Uptime (compact: "3d 14h" or "2h 15m" or "5m")
+if [ -f /proc/uptime ]; then
+  _motd_up_secs=$(cut -d. -f1 /proc/uptime)
+else
+  _motd_boot=$(sysctl -n kern.boottime 2>/dev/null | sed 's/.*sec = \([0-9]*\),.*/\1/')
+  _motd_now=$(date +%s)
+  _motd_up_secs=$((_motd_now - _motd_boot))
+fi
+_motd_up_days=$((_motd_up_secs / 86400))
+_motd_up_hours=$((_motd_up_secs % 86400 / 3600))
+_motd_up_mins=$((_motd_up_secs % 3600 / 60))
+if [ "$_motd_up_days" -gt 0 ]; then
+  _motd_uptime="${_motd_up_days}d ${_motd_up_hours}h"
+elif [ "$_motd_up_hours" -gt 0 ]; then
+  _motd_uptime="${_motd_up_hours}h ${_motd_up_mins}m"
+else
+  _motd_uptime="${_motd_up_mins}m"
+fi
+
+# Load average (1-min)
+_motd_load="$(uptime | sed 's/.*load average[s]*: *//' | cut -d, -f1 | tr -d ' ')"
+
+# Memory (used/total in GB)
+if [ "$DOTFILES_OS" = "macos" ]; then
+  _motd_mem_total_bytes=$(sysctl -n hw.memsize 2>/dev/null)
+  _motd_mem_page_size=$(sysctl -n hw.pagesize 2>/dev/null)
+  _motd_mem_used_pages=$(vm_stat 2>/dev/null | awk '
+    /Pages active/    { gsub(/\./,"",$NF); a=$NF }
+    /Pages wired/     { gsub(/\./,"",$NF); w=$NF }
+    /Pages compressed/{ gsub(/\./,"",$NF); c=$NF }
+    END { print a+w+c }
+  ')
+  _motd_mem="$(awk "BEGIN {
+    used = ${_motd_mem_used_pages:-0} * ${_motd_mem_page_size:-4096} / 1073741824
+    total = ${_motd_mem_total_bytes:-0} / 1073741824
+    printf \"%.0f/%.0f GB\", used, total
+  }")"
+else
+  _motd_mem="$(awk '/MemTotal/ {t=$2} /MemAvailable/ {a=$2} END {
+    printf "%.0f/%.0f GB", (t-a)/1048576, t/1048576
+  }' /proc/meminfo 2>/dev/null || echo "?")"
+fi
+
+# Disk usage (root partition)
+_motd_disk="$(df -h / 2>/dev/null | awk 'NR==2 { print $5 " of " $2 }')"
+
+# Local IP
+if [ "$DOTFILES_OS" = "macos" ]; then
+  _motd_local_ip="$(ipconfig getifaddr en0 2>/dev/null \
+    || ipconfig getifaddr en1 2>/dev/null \
+    || true)"
+else
+  _motd_local_ip="$(hostname -I 2>/dev/null | awk '{print $1}' || true)"
+fi
+
+# --- Render ---
+_motd_subtitle="${DOTFILES_ENV:-unknown} · ${_motd_shell}"
+_motd_stats="up ${_motd_uptime} · load ${_motd_load} · mem ${_motd_mem} · disk ${_motd_disk}"
+
+if command -v gum >/dev/null 2>&1 && [ -t 1 ]; then
+  _motd_body="${_c_bold}${_c_cyan}  ${_motd_host}${_c_reset}
+  ${_c_dim}${_motd_subtitle}${_c_reset}
+  ${_c_dim}${_motd_stats}${_c_reset}"
+
+  [ -n "$_motd_local_ip" ] && _motd_body="$_motd_body
+  ${_c_dim}lan ${_motd_local_ip}${_c_reset}"
+
+  echo ""
+  printf '%s\n' "$_motd_body" | gum style \
+    --border rounded \
+    --border-foreground 62 \
+    --padding "0 1" \
+    --no-strip-ansi
+  echo ""
+else
+  echo ""
+  echo "$_motd_host | ${DOTFILES_ENV:-unknown} | $_motd_shell"
+  echo "up $_motd_uptime | load $_motd_load | mem $_motd_mem | disk $_motd_disk"
+  [ -n "$_motd_local_ip" ] && echo "lan $_motd_local_ip"
+  echo ""
+fi
+
+# Cleanup
+unset _c_reset _c_bold _c_dim _c_cyan
+unset _motd_host _motd_shell _motd_local_ip
+unset _motd_up_secs _motd_up_days _motd_up_hours _motd_up_mins _motd_uptime
+unset _motd_boot _motd_now _motd_load _motd_mem _motd_disk
+unset _motd_mem_total_bytes _motd_mem_page_size _motd_mem_used_pages
+unset _motd_subtitle _motd_stats _motd_body

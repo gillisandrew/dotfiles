@@ -1,0 +1,4 @@
+#!/bin/sh
+# Clear cached shell init scripts. Run after upgrading tools (starship, atuin, etc).
+rm -rf "$HOME/.cache/shell-init"
+echo "Shell init cache cleared. Next shell startup will regenerate caches."

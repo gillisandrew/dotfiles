@@ -7,7 +7,12 @@
 
 . "$HOME/.local/bin/dotfiles-env"
 
-autoload -Uz compinit && compinit
+autoload -Uz compinit
+if [[ -f ~/.zcompdump && $(date +'%j') == $(stat -f '%Sm' -t '%j' ~/.zcompdump 2>/dev/null) ]]; then
+  compinit -C  # use cached dump (skips security check + regeneration)
+else
+  compinit     # full rebuild
+fi
 
 if [ "$DOTFILES_ENV" = "macos" ]; then
   [ -S "$HOME/.bitwarden-ssh-agent.sock" ] && export SSH_AUTH_SOCK="$HOME/.bitwarden-ssh-agent.sock"
@@ -16,83 +21,45 @@ fi
 [ "$(command -v curlie)" ] && alias curl="curlie"
 [ "$(command -v bat)" ] && alias cat="bat"
 
-if command -v brew >/dev/null 2>&1; then
-  [ -f "$(brew --prefix)/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh" ] && source "$(brew --prefix)/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh"
-  [ -f "$(brew --prefix)/share/zsh-autosuggestions/zsh-autosuggestions.zsh" ] && source "$(brew --prefix)/share/zsh-autosuggestions/zsh-autosuggestions.zsh"
+if [ "$DOTFILES_OS" = "macos" ]; then
+  _brew_prefix="/opt/homebrew"
+elif [ "$DOTFILES_OS" = "linux" ]; then
+  _brew_prefix="/home/linuxbrew/.linuxbrew"
 fi
+if [ -n "$_brew_prefix" ]; then
+  [ -f "$_brew_prefix/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh" ] && source "$_brew_prefix/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh"
+  [ -f "$_brew_prefix/share/zsh-autosuggestions/zsh-autosuggestions.zsh" ] && source "$_brew_prefix/share/zsh-autosuggestions/zsh-autosuggestions.zsh"
+fi
+unset _brew_prefix
 
-extract () {
-  if [ -f "$1" ] ; then
-    case $1 in
-      *.tar.bz2)   tar xjf $1     ;;
-      *.tar.gz)    tar xzf $1     ;;
-      *.bz2)       bunzip2 $1     ;;
-      *.rar)       unrar e $1     ;;
-      *.gz)        gunzip $1      ;;
-      *.tar)       tar xf $1      ;;
-      *.tbz2)      tar xjf $1     ;;
-      *.tgz)       tar xzf $1     ;;
-      *.zip)       unzip $1       ;;
-      *.Z)         uncompress $1  ;;
-      *.7z)        7z x $1        ;;
-      *)     echo "'$1' cannot be extracted via extract()" ;;
-        esac
-    else
-      echo "'$1' is not a valid file"
-    fi
-}
-
-refresh_github_token() {
-  if ! command -v gh >/dev/null 2>&1; then
-    echo "GitHub CLI (gh) is not installed."
-    return 1
-  fi
-
-  if ! gh auth status >/dev/null 2>&1; then
-    echo "No active GitHub CLI authentication session found."
-    return 2
-  fi
-
-  local env_file="$HOME/.local/env/$1"
-  if [ ! -f "$env_file" ]; then
-    echo "Environment file '$env_file' not found."
-    return 3
-  fi
-
-  local new_token
-  new_token=$(gh auth token 2>/dev/null)
-  if [ -z "$new_token" ]; then
-    echo "Failed to retrieve GitHub token."
-    return 4
-  fi
-
-  local var_name="${2:-GITHUB_TOKEN}"
-  sed -i.bak -E "s|^(${var_name}=).*|\1$new_token|" "$env_file"
-  echo "$var_name updated in $env_file"
-
-}
+. "$HOME/.local/share/shell/functions.sh"
 
 export CARAPACE_BRIDGES='zsh,fish,bash,inshellisense' # optional
 export CARAPACE_MATCH=1
 # zstyle ':completion:*' format $'\e[2;37mCompleting %d\e[m'
 
-if [ -z "$CLAUDECODE" ]; then
-  [ -z "$DISABLE_CARAPACE" ] && [ "$(command -v carapace)" ] && source <(carapace _carapace zsh)
-  [ -z "$DISABLE_FZF" ] && [ "$(command -v fzf)" ] && source <(fzf --zsh)
-  [ -z "$DISABLE_STARSHIP" ] && [ "$(command -v starship)" ] && eval "$(starship init zsh)"
-  [ -z "$DISABLE_ATUIN" ] && [ "$(command -v atuin)" ] && eval "$(atuin init zsh)"
-  [ -z "$DISABLE_ZOXIDE" ] && [ "$(command -v zoxide)" ] && eval "$(zoxide init zsh --cmd cd)"
-fi
+_shell_cache_dir="$HOME/.cache/shell-init"
+[ -d "$_shell_cache_dir" ] || mkdir -p "$_shell_cache_dir"
 
-
-curl_harder() {
-  local count=0;
-  until curl "$@" -O --retry 999 --retry-max-time 0 -C -
-  do
-    ((count++))
-    echo "Reattempting download...${count}"
-    sleep 1
-  done
+_cached_init() {
+  # Usage: _cached_init <cache-file> <command...>
+  local cache="$_shell_cache_dir/$1"; shift
+  if [ ! -f "$cache" ]; then
+    "$@" > "$cache" 2>/dev/null
+  fi
+  source "$cache"
 }
 
-. "$HOME/.local/bin/dotfiles-motd"
+if [ -z "$CLAUDECODE" ]; then
+  [ -z "$DISABLE_CARAPACE" ] && [ "$(command -v carapace)" ] && _cached_init carapace.zsh carapace _carapace zsh
+  [ -z "$DISABLE_FZF" ] && [ "$(command -v fzf)" ] && _cached_init fzf.zsh fzf --zsh
+  [ -z "$DISABLE_STARSHIP" ] && [ "$(command -v starship)" ] && _cached_init starship.zsh starship init zsh
+  [ -z "$DISABLE_ATUIN" ] && [ "$(command -v atuin)" ] && _cached_init atuin.zsh atuin init zsh
+  [ -z "$DISABLE_ZOXIDE" ] && [ "$(command -v zoxide)" ] && _cached_init zoxide.zsh zoxide init zsh --cmd cd
+fi
+
+unset _shell_cache_dir
+unset -f _cached_init
+
+
+. "$HOME/.local/bin/dotfiles-motd-fast"
