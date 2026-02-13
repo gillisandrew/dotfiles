@@ -5,6 +5,11 @@
 
 case $- in *i*) ;; *) return;; esac
 
+# Source login env if not already loaded (e.g. Codespaces non-login shells)
+if [ -z "$DOTFILES_OS" ] && [ -f "$HOME/.profile" ]; then
+  . "$HOME/.profile"
+fi
+
 . "$HOME/.local/bin/dotfiles-env"
 
 if [ "$DOTFILES_ENV" = "macos" ]; then
