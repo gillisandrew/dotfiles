@@ -134,7 +134,8 @@ fi
 # --- Optionally run brew bundle ---
 if [[ "$APPLY" == true ]]; then
   if [[ -f "$BREWFILE" ]]; then
-    spin "Running brew bundle..." brew bundle --file="$BREWFILE"
+    log_info "Running brew bundle..."
+    brew bundle --file="$BREWFILE"
     log_info "brew bundle complete"
   else
     log_warn "No Brewfile found at $BREWFILE"
