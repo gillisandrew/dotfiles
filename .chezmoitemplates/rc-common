@@ -1,0 +1,42 @@
+if [ "$DOTFILES_ENV" = "macos" ]; then
+  [ -S "$HOME/.bitwarden-ssh-agent.sock" ] && export SSH_AUTH_SOCK="$HOME/.bitwarden-ssh-agent.sock"
+fi
+
+[ "$(command -v curlie)" ] && alias curl="curlie"
+[ "$(command -v bat)" ] && alias cat="bat"
+
+. "$HOME/.local/share/shell/functions.sh"
+
+export CARAPACE_BRIDGES='zsh,fish,bash,inshellisense' # optional
+export CARAPACE_MATCH=1
+
+_shell_cache_dir="$HOME/.cache/shell-init"
+[ -d "$_shell_cache_dir" ] || mkdir -p "$_shell_cache_dir"
+
+_cached_init() {
+  # Usage: _cached_init <cache-file> <command...>
+  local cache="$_shell_cache_dir/$1"; shift
+  if [ ! -f "$cache" ]; then
+    "$@" > "$cache" 2>/dev/null
+  fi
+  source "$cache"
+}
+
+if [ -z "$CLAUDECODE" ]; then
+  [ -z "$DISABLE_CARAPACE" ] && [ "$(command -v carapace)" ] && _cached_init carapace.{{ . }} carapace _carapace {{ . }}
+{{ if eq . "zsh" }}  [ -z "$DISABLE_FZF" ] && [ "$(command -v fzf)" ] && _cached_init fzf.zsh fzf --zsh
+{{ end }}  [ -z "$DISABLE_STARSHIP" ] && [ "$(command -v starship)" ] && _cached_init starship.{{ . }} starship init {{ . }}
+  [ -z "$DISABLE_ATUIN" ] && [ "$(command -v atuin)" ] && _cached_init atuin.{{ . }} atuin init {{ . }}
+  [ -z "$DISABLE_ZOXIDE" ] && [ "$(command -v zoxide)" ] && _cached_init zoxide.{{ . }} zoxide init {{ . }} --cmd cd
+fi
+
+unset _shell_cache_dir
+unset -f _cached_init
+
+if type brew &> /dev/null; then
+  if brew command command-not-found-init > /dev/null 2>&1; then
+    eval "$(brew command-not-found-init)";
+  fi
+fi
+
+. "$HOME/.local/bin/dotfiles-motd-fast"

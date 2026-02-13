@@ -1,0 +1,20 @@
+## .bashrc: interactive shell config
+# Runs for interactive shells only.
+# Good: prompt/theme, aliases, functions, completions, keybindings.
+# Avoid: PATH/toolchain exports (keep those in .profile).
+
+case $- in *i*) ;; *) return;; esac
+
+# Source login env if not already loaded (e.g. Codespaces non-login shells)
+if [ -z "$DOTFILES_OS" ] && [ -f "$HOME/.profile" ]; then
+  . "$HOME/.profile"
+fi
+
+. "$HOME/.local/bin/dotfiles-env"
+
+# Common aliases
+if [ "$DOTFILES_ENV" = "macos" ]; then
+  alias espansoconfig="code \"$HOME/.config/espanso\""
+fi
+
+{{ template "rc-common" "bash" }}

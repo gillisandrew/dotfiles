@@ -1,0 +1,10 @@
+## .profile: login shell setup (bash/sh)
+# Runs once for login shells. Put environment and PATH here.
+# Good: PATH tweaks, JAVA_HOME, pnpm/go/cargo, EDITOR defaults.
+# Avoid: prompt, aliases, completions, or interactive tooling.
+
+{{ template "profile-common" . }}
+# Use XDG path for espanso config (macOS-only app, no .bashenv to put this in)
+if [ "$DOTFILES_ENV" = "macos" ]; then
+  export ESPANSO_CONFIG_DIR="$HOME/.config/espanso"
+fi
