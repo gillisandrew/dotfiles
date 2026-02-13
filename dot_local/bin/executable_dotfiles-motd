@@ -10,6 +10,9 @@ _c_bold=$(printf '\033[1m')
 _c_dim=$(printf '\033[2m')
 _c_green=$(printf '\033[32m')
 _c_cyan=$(printf '\033[36m')
+_c_yellow=$(printf '\033[33m')
+
+. "$HOME/.local/bin/dotfiles-env"
 
 # --- System info ---
 _motd_host="$(hostname -s 2>/dev/null || hostname)"
@@ -22,11 +25,66 @@ else
   _motd_shell="sh"
 fi
 
+# Uptime (compact: "3d 14h" or "2h 15m" or "5m")
+if [ -f /proc/uptime ]; then
+  _motd_up_secs=$(cut -d. -f1 /proc/uptime)
+else
+  _motd_boot=$(sysctl -n kern.boottime 2>/dev/null | sed 's/.*sec = \([0-9]*\).*/\1/')
+  _motd_now=$(date +%s)
+  _motd_up_secs=$((_motd_now - _motd_boot))
+fi
+_motd_up_days=$((_motd_up_secs / 86400))
+_motd_up_hours=$((_motd_up_secs % 86400 / 3600))
+_motd_up_mins=$((_motd_up_secs % 3600 / 60))
+if [ "$_motd_up_days" -gt 0 ]; then
+  _motd_uptime="${_motd_up_days}d ${_motd_up_hours}h"
+elif [ "$_motd_up_hours" -gt 0 ]; then
+  _motd_uptime="${_motd_up_hours}h ${_motd_up_mins}m"
+else
+  _motd_uptime="${_motd_up_mins}m"
+fi
+
+# Load average (1-min)
+_motd_load="$(uptime | sed 's/.*load average[s]*: *//' | cut -d, -f1 | tr -d ' ')"
+
+# Memory (used/total in GB)
+if [ "$DOTFILES_OS" = "macos" ]; then
+  _motd_mem_total_bytes=$(sysctl -n hw.memsize 2>/dev/null)
+  _motd_mem_page_size=$(sysctl -n hw.pagesize 2>/dev/null)
+  _motd_mem_used_pages=$(vm_stat 2>/dev/null | awk '
+    /Pages active/    { gsub(/\./,"",$NF); a=$NF }
+    /Pages wired/     { gsub(/\./,"",$NF); w=$NF }
+    /Pages compressed/{ gsub(/\./,"",$NF); c=$NF }
+    END { print a+w+c }
+  ')
+  _motd_mem="$(awk "BEGIN {
+    used = ${_motd_mem_used_pages:-0} * ${_motd_mem_page_size:-4096} / 1073741824
+    total = ${_motd_mem_total_bytes:-0} / 1073741824
+    printf \"%.0f/%.0f GB\", used, total
+  }")"
+else
+  _motd_mem="$(awk '/MemTotal/ {t=$2} /MemAvailable/ {a=$2} END {
+    printf "%.0f/%.0f GB", (t-a)/1048576, t/1048576
+  }' /proc/meminfo 2>/dev/null || echo "?")"
+fi
+
+# Disk usage (root partition)
+_motd_disk="$(df -h / 2>/dev/null | awk 'NR==2 { print $5 " of " $2 }')"
+
+# Local IP
+if [ "$DOTFILES_OS" = "macos" ]; then
+  _motd_local_ip="$(ipconfig getifaddr en0 2>/dev/null \
+    || ipconfig getifaddr en1 2>/dev/null \
+    || true)"
+else
+  _motd_local_ip="$(hostname -I 2>/dev/null | awk '{print $1}' || true)"
+fi
+
 # External IP (2s timeout, fail silently)
-_motd_ip="$(curl -sf --max-time 2 https://api.ipify.org 2>/dev/null \
+_motd_ext_ip="$(curl -sf --max-time 2 https://api.ipify.org 2>/dev/null \
   || curl -sf --max-time 2 https://icanhazip.com 2>/dev/null \
   || true)"
-_motd_ip="$(echo "$_motd_ip" | tr -d '[:space:]')"
+_motd_ext_ip="$(echo "$_motd_ext_ip" | tr -d '[:space:]')"
 
 # --- Brew groups ---
 _motd_brewfile="$HOME/.Brewfile"
@@ -39,7 +97,6 @@ _motd_enabled="|"
 _motd_group_lines=""
 
 if [ -f "$_motd_brewfile" ]; then
-  # Discover all groups
   while IFS= read -r _motd_line; do
     _motd_line="${_motd_line%$(printf '\r')}"
     case "$_motd_line" in
@@ -52,7 +109,6 @@ if [ -f "$_motd_brewfile" ]; then
     esac
   done < "$_motd_brewfile"
 
-  # Read enabled groups
   if [ -f "$_motd_config" ]; then
     while IFS= read -r _motd_line; do
       _motd_line="${_motd_line%$(printf '\r')}"
@@ -65,7 +121,6 @@ if [ -f "$_motd_brewfile" ]; then
     *) _motd_enabled="${_motd_enabled}core|" ;;
   esac
 
-  # Build group display lines (3 per row)
   _motd_row=""
   _motd_col=0
   for _motd_g in $_motd_all_names; do
@@ -91,11 +146,27 @@ fi
 
 # --- Render ---
 if command -v gum >/dev/null 2>&1 && [ -t 1 ]; then
+  # Line 1: hostname
+  # Line 2: env · shell
   _motd_subtitle="${DOTFILES_ENV:-unknown} · ${_motd_shell}"
-  [ -n "$_motd_ip" ] && _motd_subtitle="$_motd_subtitle · $_motd_ip"
+
+  # Line 3: system stats
+  _motd_stats="up ${_motd_uptime} · load ${_motd_load} · mem ${_motd_mem} · disk ${_motd_disk}"
+
+  # Line 4: network
+  _motd_net=""
+  [ -n "$_motd_local_ip" ] && _motd_net="lan ${_motd_local_ip}"
+  if [ -n "$_motd_ext_ip" ]; then
+    [ -n "$_motd_net" ] && _motd_net="$_motd_net · "
+    _motd_net="${_motd_net}wan ${_motd_ext_ip}"
+  fi
 
   _motd_body="${_c_bold}${_c_cyan}  ${_motd_host}${_c_reset}
-  ${_c_dim}${_motd_subtitle}${_c_reset}"
+  ${_c_dim}${_motd_subtitle}${_c_reset}
+  ${_c_dim}${_motd_stats}${_c_reset}"
+
+  [ -n "$_motd_net" ] && _motd_body="$_motd_body
+  ${_c_dim}${_motd_net}${_c_reset}"
 
   if [ "$_motd_group_count" -gt 0 ]; then
     _motd_body="$_motd_body
@@ -117,9 +188,15 @@ $_motd_group_lines"
 else
   # Plain text fallback
   echo ""
-  _motd_plain="${_motd_host} | ${DOTFILES_ENV:-unknown} | $_motd_shell"
-  [ -n "$_motd_ip" ] && _motd_plain="$_motd_plain | $_motd_ip"
-  echo "$_motd_plain"
+  echo "$_motd_host | ${DOTFILES_ENV:-unknown} | $_motd_shell"
+  echo "up $_motd_uptime | load $_motd_load | mem $_motd_mem | disk $_motd_disk"
+  _motd_net_plain=""
+  [ -n "$_motd_local_ip" ] && _motd_net_plain="lan $_motd_local_ip"
+  if [ -n "$_motd_ext_ip" ]; then
+    [ -n "$_motd_net_plain" ] && _motd_net_plain="$_motd_net_plain | "
+    _motd_net_plain="${_motd_net_plain}wan $_motd_ext_ip"
+  fi
+  [ -n "$_motd_net_plain" ] && echo "$_motd_net_plain"
   if [ "$_motd_group_count" -gt 0 ]; then
     echo ""
     for _motd_g in $_motd_all_names; do
@@ -137,8 +214,12 @@ else
 fi
 
 # Cleanup (sourced script, don't pollute shell)
-unset _c_reset _c_bold _c_dim _c_green _c_cyan
-unset _motd_host _motd_shell _motd_ip _motd_subtitle _motd_plain
+unset _c_reset _c_bold _c_dim _c_green _c_cyan _c_yellow
+unset _motd_host _motd_shell _motd_local_ip _motd_ext_ip _motd_net _motd_net_plain
+unset _motd_up_secs _motd_up_days _motd_up_hours _motd_up_mins _motd_uptime
+unset _motd_boot _motd_now _motd_load _motd_mem _motd_disk
+unset _motd_mem_total_bytes _motd_mem_page_size _motd_mem_used_pages
+unset _motd_subtitle _motd_stats
 unset _motd_brewfile _motd_config _motd_line _motd_name _motd_g
 unset _motd_all_names _motd_enabled _motd_group_lines _motd_row _motd_col
 unset _motd_group_count _motd_has_disabled _motd_body
