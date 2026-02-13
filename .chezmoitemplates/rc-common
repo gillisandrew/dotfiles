@@ -55,7 +55,7 @@ if command -v brew >/dev/null 2>&1; then
 
     local do_install=false
     if command -v gum >/dev/null 2>&1 && [[ -t 0 ]]; then
-      gum confirm "Install ${formula}?" && do_install=true
+      gum confirm --default=false "Install ${formula}?" && do_install=true
     else
       printf "Install %s? [y/N] " "${formula}" >&2
       local reply; read -r reply
