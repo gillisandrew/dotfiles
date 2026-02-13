@@ -26,19 +26,50 @@ chezmoi manages dotfiles by maintaining a **source state** (`~/.local/share/chez
 
 ## Source File Naming
 
-Prefixes and suffixes map source paths to target paths with attributes:
+### All Prefixes
 
-| Prefix/Suffix | Effect | Example |
-|---------------|--------|---------|
-| `dot_` | Adds `.` to target name | `dot_zshrc` → `.zshrc` |
-| `private_` | Mode 0600 (file) or 0700 (dir) | `private_dot_ssh/` → `.ssh/` |
-| `executable_` | Mode 0755 | `executable_script` → `script` |
-| `readonly_` | Mode 0444 | `readonly_config` → `config` |
-| `empty_` | Create empty file | `empty_dot_hushlogin` → `.hushlogin` |
-| `modify_` | Modify script (see below) | `modify_config` modifies `config` |
-| `.tmpl` suffix | Process as Go template | `dot_zshrc.tmpl` → `.zshrc` |
+| Prefix | Effect |
+|--------|--------|
+| `dot_` | Adds `.` to target name (`dot_zshrc` → `.zshrc`) |
+| `private_` | Remove group/world permissions (0600 file, 0700 dir) |
+| `executable_` | Add executable permissions (0755) |
+| `readonly_` | Remove write permissions (0444) |
+| `empty_` | Ensure file exists, even if empty |
+| `create_` | Create file with contents only if it doesn't already exist (never overwrite) |
+| `modify_` | Treat contents as script that modifies existing file (see below) |
+| `remove_` | Remove the target file/symlink if it exists |
+| `exact_` | On directories: remove anything inside not managed by chezmoi |
+| `encrypted_` | Encrypt file in source state |
+| `symlink_` | Create a symlink instead of regular file (contents = link target) |
+| `literal_` | Stop parsing further prefixes (for filenames containing `_`) |
+| `external_` | On directories: ignore attribute prefixes in children |
+| `run_` | Treat contents as a script to run |
+| `once_` | Only run script if not run successfully before (by hash) |
+| `onchange_` | Re-run script when contents change (by hash + filename) |
+| `before_` | Run script before updating destination |
+| `after_` | Run script after updating destination |
 
-**Combine prefixes** in order: `private_dot_ssh/config.tmpl` → `~/.ssh/config` (mode 0600 from parent dir, templated).
+### Prefix Order by Target Type
+
+**Prefix order matters.** Each target type has a specific allowed prefix sequence:
+
+| Target Type | Allowed Prefixes (in order) | Suffix |
+|-------------|----------------------------|--------|
+| **Directory** | `remove_`, `external_`, `exact_`, `private_`, `readonly_`, `dot_` | none |
+| **Regular file** | `encrypted_`, `private_`, `readonly_`, `empty_`, `executable_`, `dot_` | `.tmpl` |
+| **Create file** | `create_`, `encrypted_`, `private_`, `readonly_`, `empty_`, `executable_`, `dot_` | `.tmpl` |
+| **Modify file** | `modify_`, `encrypted_`, `private_`, `readonly_`, `executable_`, `dot_` | `.tmpl` |
+| **Remove** | `remove_`, `dot_` | none |
+| **Script** | `run_`, `once_` or `onchange_`, `before_` or `after_` | `.tmpl` |
+| **Symlink** | `symlink_`, `dot_` | `.tmpl` |
+
+**Examples:**
+- `encrypted_private_dot_env.tmpl` → `~/.env` (decrypted, mode 0600, templated)
+- `create_dot_config/app/settings.json` → only created if missing
+- `exact_dot_config/nvim/` → deletes unmanaged files inside `~/.config/nvim/`
+- `symlink_dot_config/nvim.tmpl` → `~/.config/nvim` as symlink (target from template)
+- `remove_dot_old-config` → deletes `~/.old-config` if it exists
+- `run_onchange_before_install.sh.tmpl` → runs before apply, re-runs on content change
 
 **Critical:** `private_` on a directory makes its **contents** private. You don't need `private_` on files inside a `private_` directory.
 
@@ -73,13 +104,16 @@ other content
 
 ## Script Types
 
-Scripts live in `.chezmoiscripts/` (or source root).
+Scripts live in `.chezmoiscripts/` (or source root). Prefix format: `run_` + (`once_` or `onchange_`) + (`before_` or `after_`).
 
-| Prefix | Runs | Use case |
-|--------|------|----------|
-| `run_once_` | Once ever (by script hash) | Initial setup |
-| `run_onchange_` | When script content changes | Homebrew bundle |
-| `run_once_after_` | Once, after apply | Post-install setup |
+| Prefix Combo | Runs | Timing |
+|--------------|------|--------|
+| `run_once_before_` | Once (by hash) | Before applying files |
+| `run_once_after_` | Once (by hash) | After applying files |
+| `run_onchange_before_` | When content changes | Before applying files |
+| `run_onchange_after_` | When content changes | After applying files |
+
+Default timing is `before_` if neither `before_` nor `after_` is specified.
 
 **Triggering on external file changes** - use `.tmpl` suffix and embed file content in a comment so the script hash changes when the referenced file changes:
 ```bash
