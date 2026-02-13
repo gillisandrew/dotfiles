@@ -1,5 +1,5 @@
 #!/bin/sh
-# Print environment summary and brew-groups status on new interactive shells.
+# Print environment summary and available brew roles on new interactive shells.
 # Sourced by .bashrc and .zshrc. Skips in Claude Code sessions.
 
 [ -n "$CLAUDECODE" ] && return 0 2>/dev/null
@@ -10,9 +10,24 @@ _c_bold=$(printf '\033[1m')
 _c_dim=$(printf '\033[2m')
 _c_green=$(printf '\033[32m')
 _c_cyan=$(printf '\033[36m')
-_c_yellow=$(printf '\033[33m')
 
 . "$HOME/.local/bin/dotfiles-env"
+
+# --- Kick off parallel brew bundle checks (runs while we gather system info) ---
+_motd_role_dir="$HOME/.Brewfile.d"
+_motd_check_dir=""
+if [ -d "$_motd_role_dir" ] && command -v brew >/dev/null 2>&1; then
+  _motd_check_dir=$(mktemp -d)
+  # Suppress job control notifications (sourced in interactive shell)
+  case "$-" in *m*) _motd_had_monitor=true ;; *) _motd_had_monitor=false ;; esac
+  set +m
+  for _motd_f in "$_motd_role_dir"/*; do
+    if [ -f "$_motd_f" ]; then
+      _motd_name=$(basename "$_motd_f")
+      (brew bundle check --file="$_motd_f" >/dev/null 2>&1 && echo ok || echo missing) > "$_motd_check_dir/$_motd_name" &
+    fi
+  done
+fi
 
 # --- System info ---
 _motd_host="$(hostname -s 2>/dev/null || hostname)"
@@ -29,7 +44,7 @@ fi
 if [ -f /proc/uptime ]; then
   _motd_up_secs=$(cut -d. -f1 /proc/uptime)
 else
-  _motd_boot=$(sysctl -n kern.boottime 2>/dev/null | sed 's/.*sec = \([0-9]*\).*/\1/')
+  _motd_boot=$(sysctl -n kern.boottime 2>/dev/null | sed 's/.*sec = \([0-9]*\),.*/\1/')
   _motd_now=$(date +%s)
   _motd_up_secs=$((_motd_now - _motd_boot))
 fi
@@ -86,62 +101,43 @@ _motd_ext_ip="$(curl -sf --max-time 2 https://api.ipify.org 2>/dev/null \
   || true)"
 _motd_ext_ip="$(echo "$_motd_ext_ip" | tr -d '[:space:]')"
 
-# --- Brew groups ---
-_motd_brewfile="$HOME/.Brewfile"
-_motd_config="$HOME/.config/brew-groups"
-_motd_group_count=0
-_motd_has_disabled=false
-
-_motd_all_names=""
-_motd_enabled="|"
-_motd_group_lines=""
-
-if [ -f "$_motd_brewfile" ]; then
-  while IFS= read -r _motd_line; do
-    _motd_line="${_motd_line%$(printf '\r')}"
-    case "$_motd_line" in
-      "# === "*)
-        _motd_name="${_motd_line#\# === }"
-        _motd_name="${_motd_name%%:*}"
-        _motd_all_names="$_motd_all_names $_motd_name"
-        _motd_group_count=$((_motd_group_count + 1))
-        ;;
-    esac
-  done < "$_motd_brewfile"
-
-  if [ -f "$_motd_config" ]; then
-    while IFS= read -r _motd_line; do
-      _motd_line="${_motd_line%$(printf '\r')}"
-      _motd_line="$(echo "$_motd_line" | tr -d ' ')"
-      [ -n "$_motd_line" ] && _motd_enabled="${_motd_enabled}${_motd_line}|"
-    done < "$_motd_config"
-  fi
-  case "$_motd_enabled" in
-    *"|core|"*) ;;
-    *) _motd_enabled="${_motd_enabled}core|" ;;
-  esac
-
-  _motd_row=""
-  _motd_col=0
-  for _motd_g in $_motd_all_names; do
-    case "$_motd_enabled" in
-      *"|$_motd_g|"*)
-        _motd_row="$_motd_row  ${_c_green}●${_c_reset} $_motd_g"
-        ;;
-      *)
-        _motd_row="$_motd_row  ${_c_dim}○ $_motd_g${_c_reset}"
-        _motd_has_disabled=true
-        ;;
-    esac
-    _motd_col=$((_motd_col + 1))
-    if [ "$_motd_col" -eq 3 ]; then
-      _motd_group_lines="$_motd_group_lines$_motd_row
+# --- Collect role check results ---
+_motd_has_missing=false
+_motd_role_lines=""
+_motd_role_lines_plain=""
+if [ -n "$_motd_check_dir" ]; then
+  wait
+  [ "$_motd_had_monitor" = true ] && set -m
+  for _motd_f in "$_motd_role_dir"/*; do
+    if [ -f "$_motd_f" ]; then
+      _motd_name=$(basename "$_motd_f")
+      _motd_status=$(cat "$_motd_check_dir/$_motd_name" 2>/dev/null)
+      if [ "$_motd_status" = "ok" ]; then
+        _motd_role_lines="${_motd_role_lines}  ${_c_green}●${_c_reset} ${_motd_name}
 "
-      _motd_row=""
-      _motd_col=0
+        _motd_role_lines_plain="${_motd_role_lines_plain}  [x] ${_motd_name}
+"
+      else
+        _motd_role_lines="${_motd_role_lines}  ${_c_dim}○ ${_motd_name}${_c_reset}
+"
+        _motd_role_lines_plain="${_motd_role_lines_plain}  [ ] ${_motd_name}
+"
+        _motd_has_missing=true
+      fi
     fi
   done
-  [ -n "$_motd_row" ] && _motd_group_lines="$_motd_group_lines$_motd_row"
+  rm -rf "$_motd_check_dir"
+elif [ -d "$_motd_role_dir" ]; then
+  # brew not available — just list role names
+  for _motd_f in "$_motd_role_dir"/*; do
+    if [ -f "$_motd_f" ]; then
+      _motd_name=$(basename "$_motd_f")
+      _motd_role_lines="${_motd_role_lines}  ${_c_dim}${_motd_name}${_c_reset}
+"
+      _motd_role_lines_plain="${_motd_role_lines_plain}  ${_motd_name}
+"
+    fi
+  done
 fi
 
 # --- Render ---
@@ -168,10 +164,10 @@ if command -v gum >/dev/null 2>&1 && [ -t 1 ]; then
   [ -n "$_motd_net" ] && _motd_body="$_motd_body
   ${_c_dim}${_motd_net}${_c_reset}"
 
-  if [ "$_motd_group_count" -gt 0 ]; then
+  if [ -n "$_motd_role_lines" ]; then
     _motd_body="$_motd_body
 
-$_motd_group_lines"
+${_motd_role_lines}"
   fi
 
   echo ""
@@ -181,8 +177,8 @@ $_motd_group_lines"
     --padding "0 1" \
     --no-strip-ansi
 
-  if [ "$_motd_has_disabled" = true ]; then
-    gum style --faint --italic '  run "brew-groups" to enable more packages'
+  if [ "$_motd_has_missing" = true ]; then
+    gum style --faint --italic '  run "brew-groups" to install missing roles'
   fi
   echo ""
 else
@@ -197,29 +193,23 @@ else
     _motd_net_plain="${_motd_net_plain}wan $_motd_ext_ip"
   fi
   [ -n "$_motd_net_plain" ] && echo "$_motd_net_plain"
-  if [ "$_motd_group_count" -gt 0 ]; then
+  if [ -n "$_motd_role_lines_plain" ]; then
     echo ""
-    for _motd_g in $_motd_all_names; do
-      case "$_motd_enabled" in
-        *"|$_motd_g|"*) printf '  [x] %s\n' "$_motd_g" ;;
-        *)              printf '  [ ] %s\n' "$_motd_g" ;;
-      esac
-    done
-    if [ "$_motd_has_disabled" = true ]; then
+    printf '%s' "$_motd_role_lines_plain"
+    if [ "$_motd_has_missing" = true ]; then
       echo ""
-      echo "  run \"brew-groups\" to enable more packages"
+      echo "  run \"brew-groups\" to install missing roles"
     fi
   fi
   echo ""
 fi
 
 # Cleanup (sourced script, don't pollute shell)
-unset _c_reset _c_bold _c_dim _c_green _c_cyan _c_yellow
+unset _c_reset _c_bold _c_dim _c_green _c_cyan
 unset _motd_host _motd_shell _motd_local_ip _motd_ext_ip _motd_net _motd_net_plain
 unset _motd_up_secs _motd_up_days _motd_up_hours _motd_up_mins _motd_uptime
 unset _motd_boot _motd_now _motd_load _motd_mem _motd_disk
 unset _motd_mem_total_bytes _motd_mem_page_size _motd_mem_used_pages
 unset _motd_subtitle _motd_stats
-unset _motd_brewfile _motd_config _motd_line _motd_name _motd_g
-unset _motd_all_names _motd_enabled _motd_group_lines _motd_row _motd_col
-unset _motd_group_count _motd_has_disabled _motd_body
+unset _motd_role_dir _motd_check_dir _motd_had_monitor _motd_f _motd_name _motd_status
+unset _motd_role_lines _motd_role_lines_plain _motd_has_missing _motd_body

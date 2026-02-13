@@ -2,138 +2,113 @@
 
 set -eo pipefail
 
-# --- gum helpers ---
+# --- helpers ---
 has_gum() { command -v gum >/dev/null 2>&1; }
 log_info()  { if has_gum; then gum log --level info  "$@"; else echo "[INFO]  $*"; fi; }
 log_warn()  { if has_gum; then gum log --level warn  "$@"; else echo "[WARN]  $*"; fi; }
+log_error() { if has_gum; then gum log --level error "$@"; else echo "[ERROR] $*"; fi; }
 
-CONFIG_FILE="$HOME/.config/brew-groups"
-BREWFILE="$HOME/.Brewfile"
+BREWFILE_DIR="$HOME/.Brewfile.d"
 
-APPLY=false
-if [[ "${1:-}" == "--apply" ]]; then
-  APPLY=true
-fi
-
-# --- Discover groups from Brewfile ---
-if [[ ! -f "$BREWFILE" ]]; then
-  log_warn "No Brewfile found at $BREWFILE"
+if [[ ! -d "$BREWFILE_DIR" ]]; then
+  log_error "No Brewfile directory found at $BREWFILE_DIR"
   exit 1
 fi
 
-# Parallel indexed arrays (avoids declare -A portability issues)
-GROUP_NAMES=()
-GROUP_DESCS=()
-while IFS= read -r line; do
-  # Strip trailing \r (CRLF from git checkout)
-  line="${line%$'\r'}"
-  if [[ "$line" =~ ^#\ ===\ ([a-z_]+):\ (.+)\ ===$ ]]; then
-    GROUP_NAMES+=("${BASH_REMATCH[1]}")
-    GROUP_DESCS+=("${BASH_REMATCH[2]}")
-  fi
-done < "$BREWFILE"
-
-if [[ ${#GROUP_NAMES[@]} -eq 0 ]]; then
-  log_warn "No groups found in $BREWFILE"
-  exit 1
-fi
-
-# --- Read current selections ---
-CURRENT=()
-if [[ -f "$CONFIG_FILE" ]]; then
-  while IFS= read -r line; do
-    line="${line%$'\r'}"
-    line="${line// /}"
-    [[ -n "$line" ]] && CURRENT+=("$line")
-  done < "$CONFIG_FILE"
-fi
-
-# Helper: check if a value is in CURRENT
-is_enabled() {
-  local needle="$1"
-  local c
-  for c in "${CURRENT[@]+"${CURRENT[@]}"}"; do
-    [[ "$c" == "$needle" ]] && return 0
-  done
-  return 1
-}
-
-# --- Interactive selection ---
-if has_gum && [[ -t 0 ]]; then
-  # Build options with descriptions
-  OPTIONS=()
-  SELECTED=()
-  for i in "${!GROUP_NAMES[@]}"; do
-    label="${GROUP_NAMES[$i]} — ${GROUP_DESCS[$i]}"
-    OPTIONS+=("$label")
-    if is_enabled "${GROUP_NAMES[$i]}"; then
-      SELECTED+=("$label")
-    fi
-  done
-
-  # Build --selected flag
-  SELECTED_ARG=""
-  if [[ ${#SELECTED[@]} -gt 0 ]]; then
-    SELECTED_CSV=$(IFS=,; echo "${SELECTED[*]}")
-    SELECTED_ARG="--selected=$SELECTED_CSV"
-  fi
-
-  log_info "Select brew groups to install (core is always included):"
-  CHOSEN=()
-  while IFS= read -r line; do
-    CHOSEN+=("$line")
-  done < <(
-    if [[ -n "$SELECTED_ARG" ]]; then
-      gum choose --no-limit "$SELECTED_ARG" "${OPTIONS[@]}"
-    else
-      gum choose --no-limit "${OPTIONS[@]}"
-    fi
-  )
-
-  # Extract group names from chosen labels
-  RESULT=()
-  for choice in "${CHOSEN[@]}"; do
-    name="${choice%% —*}"
-    RESULT+=("$name")
-  done
-else
-  # Plain text fallback
-  echo "Available brew groups (core is always included):"
-  echo ""
-  for i in "${!GROUP_NAMES[@]}"; do
-    marker=" "
-    is_enabled "${GROUP_NAMES[$i]}" && marker="*"
-    echo "  [$marker] ${GROUP_NAMES[$i]} — ${GROUP_DESCS[$i]}"
-  done
-  echo ""
-  echo "Enter group names separated by spaces (or 'all' for everything):"
-  read -r INPUT
-  if [[ "$INPUT" == "all" ]]; then
-    RESULT=("${GROUP_NAMES[@]}")
-  else
-    read -ra RESULT <<< "$INPUT"
-  fi
-fi
-
-# --- Write config ---
-mkdir -p "$(dirname "$CONFIG_FILE")"
-printf '%s\n' "${RESULT[@]}" > "$CONFIG_FILE"
-
-log_info "Saved groups to $CONFIG_FILE:"
-for g in "${RESULT[@]}"; do
-  log_info "  $g"
+# --- Discover available roles ---
+ROLES=()
+for f in "$BREWFILE_DIR"/*; do
+  [[ -f "$f" ]] && ROLES+=("$(basename "$f")")
 done
 
-# core is always included by the Brewfile
-if ! printf '%s\n' "${RESULT[@]}" | grep -qx "core"; then
-  log_info "  core (always included)"
+if [[ ${#ROLES[@]} -eq 0 ]]; then
+  log_warn "No role files found in $BREWFILE_DIR"
+  exit 1
 fi
 
-# --- Optionally run brew bundle ---
-if [[ "$APPLY" == true ]]; then
-  log_info "Running brew bundle..."
-  brew bundle --global
-  log_info "brew bundle complete"
+# --- Parse arguments ---
+SELECTED=()
+if [[ $# -gt 0 ]]; then
+  if [[ "$1" == "--all" ]]; then
+    SELECTED=("${ROLES[@]}")
+  else
+    SELECTED=("$@")
+  fi
 else
-  log_info "Run 'brew bundle --global' or 'brew-groups --apply' to install"
+  # --- Check which roles are already satisfied ---
+  log_info "Checking installed roles..."
+  SATISFIED=()
+  for role in "${ROLES[@]}"; do
+    if brew bundle check --file="$BREWFILE_DIR/$role" >/dev/null 2>&1; then
+      SATISFIED+=("$role")
+    fi
+  done
+
+  # --- Interactive selection ---
+  if has_gum && [[ -t 0 ]]; then
+    GUM_ARGS=(--no-limit)
+    if [[ ${#SATISFIED[@]} -gt 0 ]]; then
+      SELECTED_CSV=$(IFS=,; echo "${SATISFIED[*]}")
+      GUM_ARGS+=("--selected=$SELECTED_CSV")
+    fi
+
+    log_info "Select roles to install:"
+    CHOSEN=()
+    while IFS= read -r line; do
+      [[ -n "$line" ]] && CHOSEN+=("$line")
+    done < <(gum choose "${GUM_ARGS[@]}" "${ROLES[@]}")
+
+    if [[ ${#CHOSEN[@]} -eq 0 ]]; then
+      log_warn "No roles selected"
+      exit 0
+    fi
+    SELECTED=("${CHOSEN[@]}")
+  else
+    # Plain text fallback
+    echo "Available roles (* = installed):"
+    echo ""
+    for i in "${!ROLES[@]}"; do
+      marker=" "
+      for s in "${SATISFIED[@]}"; do
+        [[ "$s" == "${ROLES[$i]}" ]] && marker="*" && break
+      done
+      echo "  $((i + 1))) [$marker] ${ROLES[$i]}"
+    done
+    echo ""
+    echo "Enter role names or numbers separated by spaces (or 'all'):"
+    read -r INPUT
+    if [[ "$INPUT" == "all" ]]; then
+      SELECTED=("${ROLES[@]}")
+    else
+      for token in $INPUT; do
+        if [[ "$token" =~ ^[0-9]+$ ]] && (( token >= 1 && token <= ${#ROLES[@]} )); then
+          SELECTED+=("${ROLES[$((token - 1))]}")
+        else
+          SELECTED+=("$token")
+        fi
+      done
+    fi
+  fi
 fi
+
+# --- Validate selected roles ---
+for role in "${SELECTED[@]}"; do
+  if [[ ! -f "$BREWFILE_DIR/$role" ]]; then
+    log_error "Unknown role: $role"
+    exit 1
+  fi
+done
+
+# --- Install: core first if selected, then rest ---
+ORDERED=()
+for role in "${SELECTED[@]}"; do
+  [[ "$role" == "core" ]] && ORDERED=("core" "${ORDERED[@]}")
+  [[ "$role" != "core" ]] && ORDERED+=("$role")
+done
+
+for role in "${ORDERED[@]}"; do
+  log_info "Installing role: $role"
+  brew bundle --file="$BREWFILE_DIR/$role"
+done
+
+log_info "Done"

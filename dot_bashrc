@@ -13,7 +13,7 @@ fi
 . "$HOME/.local/bin/dotfiles-env"
 
 if [ "$DOTFILES_ENV" = "macos" ]; then
-  export SSH_AUTH_SOCK="$HOME/.bitwarden-ssh-agent.sock"
+  [ -S "$HOME/.bitwarden-ssh-agent.sock" ] && export SSH_AUTH_SOCK="$HOME/.bitwarden-ssh-agent.sock"
 fi
 
 # Common aliases

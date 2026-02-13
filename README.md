@@ -29,37 +29,42 @@ To change answers later, edit `~/.config/chezmoi/chezmoi.toml` and run `chezmoi 
 bash -c "$(curl -fsSL https://raw.githubusercontent.com/gillisandrew/dotfiles/main/install.sh)"
 ```
 
-`install.sh` installs Homebrew, chezmoi, applies dotfiles, seeds brew groups, and runs `brew bundle`.
+`install.sh` installs Homebrew, chezmoi, applies dotfiles, and runs `brew bundle` on each role.
 
 **GitHub Codespaces:** Automatic — GitHub clones repos named `dotfiles` and runs `install.sh`. Only core packages are installed; AWS is disabled; email is read from `GIT_AUTHOR_EMAIL`.
 
-## Brew groups
+## Brew roles
 
-Packages in `~/.Brewfile` are organized into opt-in groups. The file `~/.config/brew-groups` controls which groups are installed (one group name per line). The `core` group is always included regardless.
+Packages are split into per-role Brewfiles in `~/.Brewfile.d/`. Each file is a plain standalone Brewfile — no config file, no state.
 
-| Group | Description |
-|-------|-------------|
+| Role | Description |
+|------|-------------|
 | `core` | Essential CLI tools (atuin, bat, fzf, gh, starship, etc.) |
-| `dev` | Language toolchains and dev CLIs (go, rust, uv, bun, etc.) |
+| `dev` | Shared dev tools (pre-commit, gitleaks, tmux, graphite, etc.) |
+| `go` | Go toolchain and gopls |
+| `js` | Node, pnpm, TypeScript |
+| `python` | uv, ruff |
+| `rust` | rustup toolchain manager |
 | `ops` | Cloud and infrastructure tools (awscli, pandoc, ncdu, etc.) |
 | `macos_cli` | macOS-specific CLI tools (trash, yubico-piv-tool, etc.) |
 | `macos_apps` | macOS desktop applications (casks) |
-| `go_tools` | Go development tools (gopls) |
 
-In devcontainers, only `core` is installed regardless of the config file.
+In devcontainers, only `core` is installed.
 
-**Managing groups:**
+**Installing packages:**
 
 ```bash
 # Interactive picker (uses gum if available, plain text fallback)
 brew-groups
 
-# Pick groups and immediately install
-brew-groups --apply
+# Install specific roles
+brew-groups core dev
 
-# Or edit directly
-echo -e "core\ndev\nops" > ~/.config/brew-groups
-brew bundle --file=~/.Brewfile
+# Install everything
+brew-groups --all
+
+# Or run brew bundle directly
+brew bundle --file=~/.Brewfile.d/core
 ```
 
 ## Shell setup
@@ -84,7 +89,7 @@ To re-generate profiles (e.g. after accounts are added/removed), just run `refre
 
 | Command | Description |
 |---------|-------------|
-| `brew-groups` | Interactive brew group picker. `--apply` to install after selecting. |
+| `brew-groups` | Install packages by role from `~/.Brewfile.d/`. Interactive picker, or pass role names / `--all`. |
 | `clean-deps` | Remove build artifacts (`node_modules`, `dist`, `.venv`, etc.). Dry-run by default; `--force` to delete. |
 | `clean-package-cache` | Purge caches for npm, pip, uv, go, cargo, terraform, and more. Dry-run by default; `--force` to execute. |
 | `dotfiles-env` | Detect environment (`DOTFILES_OS`, `DOTFILES_ENV`). Sourced by shell configs. |

@@ -1,0 +1,2 @@
+brew "go"
+go "golang.org/x/tools/gopls"

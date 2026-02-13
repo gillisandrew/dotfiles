@@ -49,34 +49,20 @@ fi
 echo "==> Applying dotfiles..."
 chezmoi init --apply gillisandrew
 
-# --- Seed brew-groups config ---
-BREW_GROUPS_FILE="$HOME/.config/brew-groups"
-if [ ! -f "$BREW_GROUPS_FILE" ]; then
-  mkdir -p "$HOME/.config"
+# --- Install packages from Brewfile.d ---
+BREWFILE_DIR="$HOME/.Brewfile.d"
+if [ -d "$BREWFILE_DIR" ]; then
   if [ "$DOTFILES_ENV" = "devcontainer" ]; then
-    echo "==> Seeding brew-groups: core only (devcontainer)"
-    : > "$BREW_GROUPS_FILE"
+    echo "==> Installing core packages (devcontainer)..."
+    brew bundle --file="$BREWFILE_DIR/core"
   else
-    echo "==> Seeding brew-groups: all groups"
-    cat > "$BREW_GROUPS_FILE" <<'GROUPS'
-core
-dev
-ops
-macos_cli
-macos_apps
-go_tools
-GROUPS
+    echo "==> Installing all package roles..."
+    for f in "$BREWFILE_DIR"/*; do
+      [ -f "$f" ] && brew bundle --file="$f"
+    done
   fi
 else
-  echo "==> brew-groups already configured"
-fi
-
-# --- Install packages from Brewfile ---
-if [ -f "$HOME/.Brewfile" ]; then
-  echo "==> Running brew bundle..."
-  brew bundle --global
-else
-  echo "==> No ~/.Brewfile found, skipping brew bundle"
+  echo "==> No ~/.Brewfile.d/ found, skipping brew bundle"
 fi
 
 echo "==> Bootstrap complete ($DOTFILES_ENV)"

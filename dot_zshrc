@@ -10,15 +10,16 @@
 autoload -Uz compinit && compinit
 
 if [ "$DOTFILES_ENV" = "macos" ]; then
-  export SSH_AUTH_SOCK="$HOME/.bitwarden-ssh-agent.sock"
+  [ -S "$HOME/.bitwarden-ssh-agent.sock" ] && export SSH_AUTH_SOCK="$HOME/.bitwarden-ssh-agent.sock"
 fi
 
-# Common aliases
-if [ "$DOTFILES_ENV" = "macos" ]; then
-  alias espansoconfig="code \"$HOME/.config/espanso\""
-fi
 [ "$(command -v curlie)" ] && alias curl="curlie"
 [ "$(command -v bat)" ] && alias cat="bat"
+
+if command -v brew >/dev/null 2>&1; then
+  [ -f "$(brew --prefix)/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh" ] && source "$(brew --prefix)/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh"
+  [ -f "$(brew --prefix)/share/zsh-autosuggestions/zsh-autosuggestions.zsh" ] && source "$(brew --prefix)/share/zsh-autosuggestions/zsh-autosuggestions.zsh"
+fi
 
 extract () {
   if [ -f "$1" ] ; then
@@ -77,10 +78,8 @@ export CARAPACE_MATCH=1
 
 if [ -z "$CLAUDECODE" ]; then
   [ -z "$DISABLE_CARAPACE" ] && [ "$(command -v carapace)" ] && source <(carapace _carapace zsh)
-  # [ -z "$DISABLE_FZF" ] && [ "$(command -v fzf)" ] && source <(fzf --zsh)
-  # [ -z "$DISABLE_TV" ] && [ "$(command -v tv)" ] && eval "$(tv init zsh)"
+  [ -z "$DISABLE_FZF" ] && [ "$(command -v fzf)" ] && source <(fzf --zsh)
   [ -z "$DISABLE_STARSHIP" ] && [ "$(command -v starship)" ] && eval "$(starship init zsh)"
-  # [ -z "$DISABLE_MCFLY" ] && [ "$(command -v mcfly)" ] && eval "$(mcfly init zsh)"
   [ -z "$DISABLE_ATUIN" ] && [ "$(command -v atuin)" ] && eval "$(atuin init zsh)"
   [ -z "$DISABLE_ZOXIDE" ] && [ "$(command -v zoxide)" ] && eval "$(zoxide init zsh --cmd cd)"
 fi
