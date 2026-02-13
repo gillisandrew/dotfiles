@@ -39,7 +39,8 @@ Packages are split into per-role Brewfiles in `~/.Brewfile.d/`. Each file is a p
 
 | Role | Description |
 |------|-------------|
-| `core` | Essential CLI tools (atuin, bat, fzf, gh, starship, etc.) |
+| `core` | Dotfiles essentials (chezmoi, git, gum, starship) |
+| `cli` | Shell enhancements (atuin, bat, curlie, fzf, gh, htop, ripgrep, yq, zoxide) |
 | `dev` | Shared dev tools (pre-commit, gitleaks, tmux, graphite, etc.) |
 | `go` | Go toolchain and gopls |
 | `js` | Node, pnpm, TypeScript |
