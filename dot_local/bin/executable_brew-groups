@@ -84,7 +84,7 @@ if has_gum && [[ -t 0 ]]; then
     CHOSEN+=("$line")
   done < <(
     if [[ -n "$SELECTED_ARG" ]]; then
-      gum choose --no-limit $SELECTED_ARG "${OPTIONS[@]}"
+      gum choose --no-limit "$SELECTED_ARG" "${OPTIONS[@]}"
     else
       gum choose --no-limit "${OPTIONS[@]}"
     fi
@@ -131,13 +131,9 @@ fi
 
 # --- Optionally run brew bundle ---
 if [[ "$APPLY" == true ]]; then
-  if [[ -f "$BREWFILE" ]]; then
-    log_info "Running brew bundle..."
-    brew bundle --file="$BREWFILE"
-    log_info "brew bundle complete"
-  else
-    log_warn "No Brewfile found at $BREWFILE"
-  fi
+  log_info "Running brew bundle..."
+  brew bundle --global
+  log_info "brew bundle complete"
 else
-  log_info "Run 'brew bundle --file=$BREWFILE' or 'brew-groups --apply' to install"
+  log_info "Run 'brew bundle --global' or 'brew-groups --apply' to install"
 fi

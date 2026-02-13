@@ -40,7 +40,7 @@ fi
 # --- Install chezmoi ---
 if ! command -v chezmoi >/dev/null 2>&1; then
   echo "==> Installing chezmoi..."
-  brew install chezmoi
+  HOMEBREW_NO_ENV_HINTS=1 brew install chezmoi
 else
   echo "==> chezmoi already installed"
 fi
@@ -74,7 +74,7 @@ fi
 # --- Install packages from Brewfile ---
 if [ -f "$HOME/.Brewfile" ]; then
   echo "==> Running brew bundle..."
-  brew bundle --file="$HOME/.Brewfile"
+  brew bundle --global
 else
   echo "==> No ~/.Brewfile found, skipping brew bundle"
 fi
