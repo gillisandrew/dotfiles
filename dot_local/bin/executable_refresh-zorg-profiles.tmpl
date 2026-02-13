@@ -35,7 +35,7 @@ create_temp_config() {
   temp_config=$(mktemp)
   cat > "$temp_config" <<EOF
 [default]
-cli_pager=
+cli_pager=fx
 output=json
 region=us-east-1
 
@@ -72,7 +72,7 @@ add_profiles_to_config() {
     local account_name="${entry%%:*}"
     local account_id="${entry##*:}"
     account_name="${account_name// /-}"
-    printf "\n[profile %s]\nsso_session = %s\nsso_account_id = %s\nsso_role_name = %s\nregion = %s\noutput = json\n" \
+    printf "\n[profile %s]\ncli_pager=fx\nsso_session = %s\nsso_account_id = %s\nsso_role_name = %s\nregion = %s\noutput = json\n" \
       "$account_name" "$AWS_SSO_SESSION" "$account_id" "$AWS_SSO_ROLE_NAME" "$AWS_SSO_REGION" >> "$config_file"
   done
 

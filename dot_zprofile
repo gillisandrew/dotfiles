@@ -17,6 +17,10 @@ export GOPATH="$HOME/.local/share/go"
 export GOBIN="$HOME/.local/bin"
 export PATH="$PATH:$GOPATH/bin"
 
+# Rust (rustup is keg-only; cargo env adds ~/.cargo/bin)
+[ -d "$(brew --prefix rustup 2>/dev/null)/bin" ] && export PATH="$(brew --prefix rustup)/bin:$PATH"
+[ -f "$HOME/.cargo/env" ] && . "$HOME/.cargo/env"
+
 if [ "$DOTFILES_ENV" = "macos" ]; then
   export JAVA_HOME=$(/usr/libexec/java_home)
 fi

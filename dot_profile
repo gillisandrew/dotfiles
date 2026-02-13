@@ -32,7 +32,8 @@ case ":$PATH:" in
 	*) export PATH="$PNPM_HOME:$PATH" ;;
 esac
 
-# Cargo
+# Rust (rustup is keg-only; cargo env adds ~/.cargo/bin)
+[ -d "$(brew --prefix rustup 2>/dev/null)/bin" ] && export PATH="$(brew --prefix rustup)/bin:$PATH"
 [ -f "$HOME/.cargo/env" ] && . "$HOME/.cargo/env"
 
 # Common user bins
