@@ -95,3 +95,5 @@ curl_harder() {
     sleep 1
   done
 }
+
+. "$HOME/.local/bin/dotfiles-motd"

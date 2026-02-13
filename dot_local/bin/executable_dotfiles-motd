@@ -1,0 +1,56 @@
+#!/bin/sh
+# Print a brief brew-groups status on new interactive shells.
+# Sourced by .bashrc and .zshrc — only prints when groups are unconfigured
+# or some are disabled. Skips in Claude Code sessions.
+
+[ -n "$CLAUDECODE" ] && return 0 2>/dev/null
+
+BREWFILE="$HOME/.Brewfile"
+CONFIG="$HOME/.config/brew-groups"
+
+[ -f "$BREWFILE" ] || return 0 2>/dev/null
+
+# Discover all groups from Brewfile
+all_groups=""
+while IFS= read -r line; do
+  case "$line" in
+    "# === "*)
+      name="${line#\# === }"
+      name="${name%%:*}"
+      all_groups="$all_groups $name"
+      ;;
+  esac
+done < "$BREWFILE"
+
+# Read enabled groups
+enabled=""
+if [ -f "$CONFIG" ]; then
+  while IFS= read -r line; do
+    case "$line" in
+      "") ;;
+      *)  enabled="$enabled $line" ;;
+    esac
+  done < "$CONFIG"
+fi
+# core is always implicitly enabled
+case "$enabled" in
+  *core*) ;;
+  *) enabled="$enabled core" ;;
+esac
+
+# Find disabled groups
+disabled=""
+disabled_count=0
+for g in $all_groups; do
+  case "$enabled" in
+    *"$g"*) ;;
+    *) disabled="$disabled $g"; disabled_count=$((disabled_count + 1)) ;;
+  esac
+done
+
+[ "$disabled_count" -eq 0 ] && return 0 2>/dev/null
+
+# Print summary
+printf "brew groups: %s enabled" "$(echo "$enabled" | xargs | tr ' ' ', ')"
+printf " · %d more available:%s\n" "$disabled_count" "$(echo "$disabled" | xargs | tr ' ' ', ' | sed 's/^/ /')"
+printf "  run \`brew-groups\` to configure\n\n"
