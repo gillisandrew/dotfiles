@@ -1,53 +1,118 @@
 #!/bin/sh
-# Print a brief brew-groups status on new interactive shells.
-# Sourced by .bashrc and .zshrc — only prints when some groups are
-# disabled. Skips in Claude Code sessions.
+# Print environment summary and brew-groups status on new interactive shells.
+# Sourced by .bashrc and .zshrc. Skips in Claude Code sessions.
 
 [ -n "$CLAUDECODE" ] && return 0 2>/dev/null
 
-BREWFILE="$HOME/.Brewfile"
-CONFIG="$HOME/.config/brew-groups"
-
-[ -f "$BREWFILE" ] || return 0 2>/dev/null
-
-# Discover all groups from Brewfile
-all_groups=""
-group_count=0
-while IFS= read -r line; do
-  line="${line%$(printf '\r')}"
-  case "$line" in
-    "# === "*)
-      name="${line#\# === }"
-      name="${name%%:*}"
-      all_groups="$all_groups|$name|"
-      group_count=$((group_count + 1))
-      ;;
-  esac
-done < "$BREWFILE"
-
-[ "$group_count" -eq 0 ] && return 0 2>/dev/null
-
-# Read enabled groups into a searchable string
-enabled="|"
-enabled_count=0
-if [ -f "$CONFIG" ]; then
-  while IFS= read -r line; do
-    line="${line%$(printf '\r')}"
-    line="$(echo "$line" | tr -d ' ')"
-    if [ -n "$line" ]; then
-      enabled="${enabled}${line}|"
-      enabled_count=$((enabled_count + 1))
-    fi
-  done < "$CONFIG"
+# --- Detect shell ---
+if [ -n "$ZSH_VERSION" ]; then
+  _motd_shell="zsh $ZSH_VERSION"
+elif [ -n "$BASH_VERSION" ]; then
+  _motd_shell="bash $BASH_VERSION"
+else
+  _motd_shell="sh"
 fi
-# core is always implicitly enabled
-case "$enabled" in
-  *"|core|"*) ;;
-  *) enabled="${enabled}core|"; enabled_count=$((enabled_count + 1)) ;;
-esac
 
-[ "$enabled_count" -ge "$group_count" ] && return 0 2>/dev/null
+# --- Brew groups ---
+_motd_brewfile="$HOME/.Brewfile"
+_motd_config="$HOME/.config/brew-groups"
 
-disabled_count=$((group_count - enabled_count))
-printf 'brew: %d of %d package groups enabled · run "brew-groups" to add more\n' \
-  "$enabled_count" "$group_count"
+_motd_enabled_list=""
+_motd_disabled_list=""
+_motd_enabled_count=0
+_motd_group_count=0
+
+if [ -f "$_motd_brewfile" ]; then
+  # Discover all groups
+  _motd_all_names=""
+  while IFS= read -r _motd_line; do
+    _motd_line="${_motd_line%$(printf '\r')}"
+    case "$_motd_line" in
+      "# === "*)
+        _motd_name="${_motd_line#\# === }"
+        _motd_name="${_motd_name%%:*}"
+        _motd_all_names="$_motd_all_names $_motd_name"
+        _motd_group_count=$((_motd_group_count + 1))
+        ;;
+    esac
+  done < "$_motd_brewfile"
+
+  # Read enabled groups
+  _motd_enabled="|"
+  if [ -f "$_motd_config" ]; then
+    while IFS= read -r _motd_line; do
+      _motd_line="${_motd_line%$(printf '\r')}"
+      _motd_line="$(echo "$_motd_line" | tr -d ' ')"
+      [ -n "$_motd_line" ] && _motd_enabled="${_motd_enabled}${_motd_line}|"
+    done < "$_motd_config"
+  fi
+  # core is always implicitly enabled
+  case "$_motd_enabled" in
+    *"|core|"*) ;;
+    *) _motd_enabled="${_motd_enabled}core|" ;;
+  esac
+
+  # Classify each group
+  for _motd_g in $_motd_all_names; do
+    case "$_motd_enabled" in
+      *"|$_motd_g|"*)
+        _motd_enabled_count=$((_motd_enabled_count + 1))
+        if [ -n "$_motd_enabled_list" ]; then
+          _motd_enabled_list="$_motd_enabled_list, $_motd_g"
+        else
+          _motd_enabled_list="$_motd_g"
+        fi
+        ;;
+      *)
+        if [ -n "$_motd_disabled_list" ]; then
+          _motd_disabled_list="$_motd_disabled_list, $_motd_g"
+        else
+          _motd_disabled_list="$_motd_g"
+        fi
+        ;;
+    esac
+  done
+fi
+
+# --- Render ---
+if command -v gum >/dev/null 2>&1 && [ -t 1 ]; then
+  _motd_body=""
+  _motd_body="$_motd_body$(printf 'env       %s\n' "${DOTFILES_ENV:-unknown}")"
+  _motd_body="$_motd_body$(printf '\nshell     %s' "$_motd_shell")"
+
+  if [ "$_motd_group_count" -gt 0 ]; then
+    _motd_body="$_motd_body$(printf '\ngroups    %s' "$_motd_enabled_list")"
+    if [ -n "$_motd_disabled_list" ]; then
+      _motd_body="$_motd_body$(printf '\navailable %s' "$_motd_disabled_list")"
+    fi
+  fi
+
+  echo ""
+  echo "$_motd_body" | gum style \
+    --border rounded \
+    --border-foreground 240 \
+    --padding "0 1" \
+    --foreground 7
+
+  if [ -n "$_motd_disabled_list" ]; then
+    gum style --faint --italic '  run "brew-groups" to enable more packages'
+  fi
+  echo ""
+else
+  # Plain text fallback
+  echo ""
+  echo "dotfiles: ${DOTFILES_ENV:-unknown} | $_motd_shell"
+  if [ "$_motd_group_count" -gt 0 ]; then
+    echo "brew groups: $_motd_enabled_list ($_motd_enabled_count/$_motd_group_count)"
+    if [ -n "$_motd_disabled_list" ]; then
+      echo "available: $_motd_disabled_list"
+      echo "  run \"brew-groups\" to enable more packages"
+    fi
+  fi
+  echo ""
+fi
+
+# Cleanup variables (sourced script, don't pollute shell)
+unset _motd_shell _motd_brewfile _motd_config _motd_line _motd_name _motd_g
+unset _motd_all_names _motd_enabled _motd_enabled_list _motd_disabled_list
+unset _motd_enabled_count _motd_group_count _motd_body
