@@ -49,6 +49,28 @@ fi
 echo "==> Applying dotfiles..."
 chezmoi init --apply gillisandrew
 
+# --- Seed brew-groups config ---
+BREW_GROUPS_FILE="$HOME/.config/brew-groups"
+if [ ! -f "$BREW_GROUPS_FILE" ]; then
+  mkdir -p "$HOME/.config"
+  if [ "$DOTFILES_ENV" = "devcontainer" ]; then
+    echo "==> Seeding brew-groups: core only (devcontainer)"
+    : > "$BREW_GROUPS_FILE"
+  else
+    echo "==> Seeding brew-groups: all groups"
+    cat > "$BREW_GROUPS_FILE" <<'GROUPS'
+core
+dev
+ops
+macos_cli
+macos_apps
+go_tools
+GROUPS
+  fi
+else
+  echo "==> brew-groups already configured"
+fi
+
 # --- Install packages from Brewfile ---
 if [ -f "$HOME/.Brewfile" ]; then
   echo "==> Running brew bundle..."

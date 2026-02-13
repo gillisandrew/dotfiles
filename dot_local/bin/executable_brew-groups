@@ -1,0 +1,144 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+# --- gum helpers ---
+has_gum() { command -v gum >/dev/null 2>&1; }
+log_info()  { if has_gum; then gum log --level info  "$@"; else echo "[INFO]  $*"; fi; }
+log_warn()  { if has_gum; then gum log --level warn  "$@"; else echo "[WARN]  $*"; fi; }
+
+spin() {
+  local title="$1"; shift
+  if has_gum && [[ -t 1 ]]; then
+    gum spin --spinner dot --title "$title" -- "$@"
+  else
+    echo "$title"; "$@"
+  fi
+}
+
+CONFIG_FILE="$HOME/.config/brew-groups"
+BREWFILE="$HOME/.Brewfile"
+
+APPLY=false
+if [[ "${1:-}" == "--apply" ]]; then
+  APPLY=true
+fi
+
+# --- Discover groups from Brewfile ---
+if [[ ! -f "$BREWFILE" ]]; then
+  log_warn "No Brewfile found at $BREWFILE"
+  exit 1
+fi
+
+declare -A GROUP_DESCS
+GROUPS=()
+while IFS= read -r line; do
+  if [[ "$line" =~ ^#\ ===\ ([a-z_]+):\ (.+)\ ===$ ]]; then
+    name="${BASH_REMATCH[1]}"
+    desc="${BASH_REMATCH[2]}"
+    GROUPS+=("$name")
+    GROUP_DESCS["$name"]="$desc"
+  fi
+done < "$BREWFILE"
+
+if [[ ${#GROUPS[@]} -eq 0 ]]; then
+  log_warn "No groups found in $BREWFILE"
+  exit 1
+fi
+
+# --- Read current selections ---
+CURRENT=()
+if [[ -f "$CONFIG_FILE" ]]; then
+  while IFS= read -r line; do
+    line="${line// /}"
+    [[ -n "$line" ]] && CURRENT+=("$line")
+  done < "$CONFIG_FILE"
+fi
+
+# --- Interactive selection ---
+if has_gum && [[ -t 0 ]]; then
+  # Build options with descriptions
+  OPTIONS=()
+  SELECTED=()
+  for g in "${GROUPS[@]}"; do
+    label="$g — ${GROUP_DESCS[$g]}"
+    OPTIONS+=("$label")
+    for c in "${CURRENT[@]}"; do
+      if [[ "$c" == "$g" ]]; then
+        SELECTED+=("$label")
+        break
+      fi
+    done
+  done
+
+  # Build --selected flag
+  SELECTED_ARG=""
+  if [[ ${#SELECTED[@]} -gt 0 ]]; then
+    SELECTED_CSV=$(IFS=,; echo "${SELECTED[*]}")
+    SELECTED_ARG="--selected=$SELECTED_CSV"
+  fi
+
+  log_info "Select brew groups to install (core is always included):"
+  CHOSEN=()
+  while IFS= read -r line; do
+    CHOSEN+=("$line")
+  done < <(
+    if [[ -n "$SELECTED_ARG" ]]; then
+      gum choose --no-limit $SELECTED_ARG "${OPTIONS[@]}"
+    else
+      gum choose --no-limit "${OPTIONS[@]}"
+    fi
+  )
+
+  # Extract group names from chosen labels
+  RESULT=()
+  for choice in "${CHOSEN[@]}"; do
+    name="${choice%% —*}"
+    RESULT+=("$name")
+  done
+else
+  # Plain text fallback
+  echo "Available brew groups (core is always included):"
+  echo ""
+  for g in "${GROUPS[@]}"; do
+    marker=" "
+    for c in "${CURRENT[@]}"; do
+      [[ "$c" == "$g" ]] && marker="*"
+    done
+    echo "  [$marker] $g — ${GROUP_DESCS[$g]}"
+  done
+  echo ""
+  echo "Enter group names separated by spaces (or 'all' for everything):"
+  read -r INPUT
+  if [[ "$INPUT" == "all" ]]; then
+    RESULT=("${GROUPS[@]}")
+  else
+    read -ra RESULT <<< "$INPUT"
+  fi
+fi
+
+# --- Write config ---
+mkdir -p "$(dirname "$CONFIG_FILE")"
+printf '%s\n' "${RESULT[@]}" > "$CONFIG_FILE"
+
+log_info "Saved groups to $CONFIG_FILE:"
+for g in "${RESULT[@]}"; do
+  log_info "  $g"
+done
+
+# core is always included by the Brewfile
+if ! printf '%s\n' "${RESULT[@]}" | grep -qx "core"; then
+  log_info "  core (always included)"
+fi
+
+# --- Optionally run brew bundle ---
+if [[ "$APPLY" == true ]]; then
+  if [[ -f "$BREWFILE" ]]; then
+    spin "Running brew bundle..." brew bundle --file="$BREWFILE"
+    log_info "brew bundle complete"
+  else
+    log_warn "No Brewfile found at $BREWFILE"
+  fi
+else
+  log_info "Run 'brew bundle --file=$BREWFILE' or 'brew-groups --apply' to install"
+fi

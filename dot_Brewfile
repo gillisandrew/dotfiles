@@ -1,52 +1,73 @@
-# Taps
-tap "oven-sh/bun"
-tap "withgraphite/tap"
+ENABLED = begin
+  File.readlines(File.expand_path("~/.config/brew-groups")).map(&:strip).reject(&:empty?)
+rescue Errno::ENOENT
+  []
+end
+ENABLED << "core" unless ENABLED.include?("core")
 
-# === Core CLI (all environments) ===
-brew "atuin"
-brew "bat"
-brew "chezmoi"
-brew "curlie"
-brew "fzf"
-brew "gh"
-brew "git"
-brew "gum"
-brew "htop"
-brew "ripgrep"
-brew "starship"
-brew "yq"
-brew "zoxide"
+DEVCONTAINER = ENV["CODESPACES"] || ENV["REMOTE_CONTAINERS"] || File.exist?("/.dockerenv")
 
-# === Full CLI (skip in ephemeral devcontainers) ===
-unless ENV["CODESPACES"] || ENV["REMOTE_CONTAINERS"] || File.exist?("/.dockerenv")
-  brew "awscli"
+def want?(group, macos_only: false)
+  return false if DEVCONTAINER && group != "core"
+  return false if macos_only && !OS.mac?
+  ENABLED.include?(group)
+end
+
+# === core: Essential CLI tools ===
+if want?("core")
+  brew "atuin"
+  brew "bat"
+  brew "chezmoi"
+  brew "curlie"
+  brew "fzf"
+  brew "gh"
+  brew "git"
+  brew "gum"
+  brew "htop"
+  brew "ripgrep"
+  brew "starship"
+  brew "yq"
+  brew "zoxide"
+end
+
+# === dev: Language toolchains and dev CLIs ===
+if want?("dev")
+  tap "oven-sh/bun"
+  tap "withgraphite/tap"
   brew "beads"
-  brew "fx"
+  brew "oven-sh/bun/bun"
   brew "git-filter-repo"
   brew "gitleaks"
   brew "go"
+  brew "pre-commit"
+  brew "rust"
+  brew "tmux"
+  brew "uv"
+  brew "withgraphite/tap/graphite"
+end
+
+# === ops: Cloud and infrastructure tools ===
+if want?("ops")
+  brew "awscli"
+  brew "fx"
   brew "jtbl"
   brew "kondo"
   brew "ncdu"
   brew "openssh"
   brew "oras"
   brew "pandoc"
-  brew "pre-commit"
-  brew "rust"
-  brew "tmux"
   brew "uutils-coreutils"
-  brew "uv"
-  brew "oven-sh/bun/bun"
-  brew "withgraphite/tap/graphite"
 end
 
-# === macOS only ===
-if OS.mac?
+# === macos_cli: macOS-specific CLI tools ===
+if want?("macos_cli", macos_only: true)
   brew "trash"
   brew "yubico-piv-tool"
   brew "zsh-syntax-highlighting"
+end
 
-  # Applications
+# === macos_apps: macOS desktop applications ===
+if want?("macos_apps", macos_only: true)
   cask "anki"
   cask "bitwarden"
   cask "claude"
@@ -72,7 +93,9 @@ if OS.mac?
   cask "whatsapp"
   cask "windows-app"
   cask "yubico-authenticator"
+end
 
-  # Go tools
+# === go_tools: Go development tools ===
+if want?("go_tools", macos_only: true)
   go "golang.org/x/tools/gopls"
 end

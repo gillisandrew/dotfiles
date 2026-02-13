@@ -23,82 +23,52 @@ On first run, chezmoi will prompt for:
 
 To change answers later, edit `~/.config/chezmoi/chezmoi.toml` and run `chezmoi apply`.
 
-On macOS, `chezmoi apply` also installs [`gum`](https://github.com/charmbracelet/gum) via Homebrew (if not already present). Scripts use gum for styled output, spinners, confirmation prompts, and tables — but all gracefully fall back to plain text when gum is unavailable.
+**Full bootstrap** (Homebrew + chezmoi + packages):
 
-**GitHub Codespaces:** Automatic — GitHub clones repos named `dotfiles` and runs `install.sh`. All prompts are skipped; AWS is disabled; email is read from `GIT_AUTHOR_EMAIL`.
+```bash
+bash -c "$(curl -fsSL https://raw.githubusercontent.com/gillisandrew/dotfiles/main/install.sh)"
+```
 
-## What's managed
+`install.sh` installs Homebrew, chezmoi, applies dotfiles, seeds brew groups, and runs `brew bundle`.
 
-### Shell
+**GitHub Codespaces:** Automatic — GitHub clones repos named `dotfiles` and runs `install.sh`. Only core packages are installed; AWS is disabled; email is read from `GIT_AUTHOR_EMAIL`.
 
-| Target | Source | Notes |
-|--------|--------|-------|
-| `~/.zshenv` | `dot_zshenv.tmpl` | Minimal env vars (sourced by every zsh invocation) |
-| `~/.zprofile` | `dot_zprofile.tmpl` | PATH and toolchain setup (login shells only) |
-| `~/.zshrc` | `dot_zshrc.tmpl` | Interactive config: prompt, aliases, functions, completions |
-| `~/.bashrc` | `dot_bashrc` | Minimal bash config (starship, dircolors) |
-| `~/.profile` | `dot_profile` | Login shell cargo env (bash/sh) |
+## Brew groups
 
-### Git
+Packages in `~/.Brewfile` are organized into opt-in groups. The file `~/.config/brew-groups` controls which groups are installed (one group name per line). The `core` group is always included regardless.
 
-| Target | Source | Notes |
-|--------|--------|-------|
-| `~/.gitconfig` | `dot_gitconfig.tmpl` | Templated (email, signing, editor) |
-| `~/.gitattributes` | `dot_gitattributes` | Verbatim |
-| `~/.gitignore` | `dot_gitignore` | Verbatim |
+| Group | Description |
+|-------|-------------|
+| `core` | Essential CLI tools (atuin, bat, fzf, gh, starship, etc.) |
+| `dev` | Language toolchains and dev CLIs (go, rust, uv, bun, etc.) |
+| `ops` | Cloud and infrastructure tools (awscli, pandoc, ncdu, etc.) |
+| `macos_cli` | macOS-specific CLI tools (trash, yubico-piv-tool, etc.) |
+| `macos_apps` | macOS desktop applications (casks) |
+| `go_tools` | Go development tools (gopls) |
 
-### App configs (`~/.config/`)
+In devcontainers, only `core` is installed regardless of the config file.
 
-| Target | Source | Platform |
-|--------|--------|----------|
-| `ghostty/config` | `private_dot_config/ghostty/config` | macOS |
-| `ghostty/themes/dracula` | `private_dot_config/ghostty/themes/dracula` | macOS |
-| `espanso/config/default.yml` | `private_dot_config/espanso/config/default.yml` | macOS |
-| `espanso/match/base.yml` | `private_dot_config/espanso/match/base.yml` | macOS |
-| `atuin/config.toml` | `private_dot_config/atuin/config.toml` | All |
-| `gh/config.yml` | `private_dot_config/gh/config.yml` | All |
-| `zed/settings.json` | `private_dot_config/zed/settings.json` | macOS |
+**Managing groups:**
 
-### Private configs
+```bash
+# Interactive picker (uses gum if available, plain text fallback)
+brew-groups
 
-| Target | Source | Notes |
-|--------|--------|-------|
-| `~/.ssh/config` | `private_dot_ssh/config` | SSH hosts |
-| `~/.aws/config` | `dot_aws/modify_private_config.tmpl` | Seeded via modify script; populated by `refresh-zorg-profiles` |
+# Pick groups and immediately install
+brew-groups --apply
 
-### Scripts (`~/.local/bin/`)
+# Or edit directly
+echo -e "core\ndev\nops" > ~/.config/brew-groups
+brew bundle --file=~/.Brewfile
+```
 
-| Command | Verb | Description |
-|---------|------|-------------|
-| `clean-deps` | `clean` | Remove build artifacts (`node_modules`, `dist`, `.venv`, etc.) from current tree. Dry-run by default; pass `--force` to delete. |
-| `clean-package-cache` | `clean` | Purge caches for npm, pip, uv, go, cargo, terraform, and more. Dry-run by default; pass `--force` to execute. |
-| `generate-reference-links` | `generate` | Scan markdown for `[[wiki-links]]` and append reference-style link definitions for GitHub compatibility. |
-| `get-ses-prod-access-status` | `get` | Check SES production access across all AWS profiles and regions. Requires active SSO session. |
-| `promote-note` | `promote` | Move a draft note from `drafts/` to `notes/`, updating cross-references in other files. |
-| `refresh-zorg-profiles` | `refresh` | Log into AWS SSO, enumerate org accounts, and regenerate `~/.aws/config` with a profile per account. *(template)* |
-| `starship-claude` | — | Starship-based status line for Claude Code sessions. Not a verb-noun command; this is a tool integration. |
+## Shell setup
 
-### Inline functions (`.zshrc`)
+Both **zsh** and **bash** get full configuration. Login env (PATH, toolchains, Homebrew) lives in `.zprofile` / `.profile`. Interactive config (prompt, aliases, functions, tool inits) lives in `.zshrc` / `.bashrc`. A shared `dotfiles-env` script detects the environment (`macos`, `devcontainer`, or `remote-linux`).
 
-| Function | Verb | Description |
-|----------|------|-------------|
-| `extract()` | `extract` | Unpack any common archive format (tar, zip, rar, 7z, gz, bz2). |
-| `refresh_github_token()` | `refresh` | Update a GitHub token in a `~/.local/env/` file using `gh auth token`. |
-| `curl_harder()` | — | Resilient `curl` wrapper with infinite retry. Utility; not a verb-noun command. |
+Bash uses the standard `.bash_profile` → `.profile` + `.bashrc` sourcing chain, so bash-based environments (Codespaces) get the same setup as zsh.
 
-### Aliases (`.zshrc`)
-
-| Alias | Expands to |
-|-------|------------|
-| `espansoconfig` | `code "$HOME/.config/espanso"` |
-
-### Lifecycle scripts (`.chezmoiscripts/`)
-
-| Script | Trigger | Behavior |
-|--------|---------|----------|
-| `run_once_before_install-gum.sh.tmpl` | First `chezmoi apply` | Installs `gum` via Homebrew for styled CLI output. macOS only; skipped in Codespaces. |
-| `run_once_after_setup-aws-sso.sh.tmpl` | First `chezmoi apply` | Prints reminder to run `refresh-zorg-profiles` if no profiles exist. Disabled in Codespaces or when AWS is off. |
-| `run_onchange_after_restart-espanso.sh.tmpl` | Espanso config changes | Restarts espanso when `base.yml` or `default.yml` change. macOS only. |
+All tool initializations (starship, atuin, zoxide, carapace) are guarded with `command -v` checks — missing tools are silently skipped.
 
 ## AWS SSO workflow
 
@@ -110,49 +80,22 @@ The `~/.aws/config` file is **not** stored statically — it's generated at runt
 
 To re-generate profiles (e.g. after accounts are added/removed), just run `refresh-zorg-profiles` again.
 
-## Espanso
+## Scripts (`~/.local/bin/`)
 
-Espanso is configured to use the XDG path (`~/.config/espanso`) via `ESPANSO_CONFIG_DIR` in `.zshenv`. This keeps all app configs under `~/.config/` rather than `~/Library/Application Support/`.
+| Command | Description |
+|---------|-------------|
+| `brew-groups` | Interactive brew group picker. `--apply` to install after selecting. |
+| `clean-deps` | Remove build artifacts (`node_modules`, `dist`, `.venv`, etc.). Dry-run by default; `--force` to delete. |
+| `clean-package-cache` | Purge caches for npm, pip, uv, go, cargo, terraform, and more. Dry-run by default; `--force` to execute. |
+| `dotfiles-env` | Detect environment (`DOTFILES_OS`, `DOTFILES_ENV`). Sourced by shell configs. |
+| `refresh-zorg-profiles` | Log into AWS SSO, enumerate org accounts, and regenerate `~/.aws/config`. |
+| `starship-claude` | Starship status line integration for Claude Code sessions. |
 
-After `chezmoi apply`, espanso restarts automatically when config files change.
-
-## Shell startup (zsh)
-
-```mermaid
-flowchart TD
-	A[Start zsh] --> B{Login shell?}
-	B -- Yes --> C[Read .zshenv]
-	B -- No --> C
-	C --> D{Interactive?}
-	D -- Yes --> E{Login shell?}
-	D -- No --> F{Login shell?}
-	E -- Yes --> G[Read .zprofile]
-	E -- No --> H[Read .zshrc]
-	F -- Yes --> G
-	F -- No --> I[Done]
-	G --> H
-	H --> I
-
-	J[Terminal.app / iTerm] --> K[Login + interactive]
-	L[ssh user@host] --> K
-	M[zsh inside a shell] --> N[Interactive only]
-	O[#!/bin/zsh script] --> P[Non-interactive]
-
-	K --> C
-	N --> C
-	P --> C
-```
-
-**Tips:**
-- Keep `.zshenv` minimal — it runs for every zsh invocation (including scripts and scp).
-- Put PATH and toolchain exports in `.zprofile` to avoid duplication in subshells.
-- Put prompt, aliases, completions, and slow tool init in `.zshrc`.
+Scripts use [gum](https://github.com/charmbracelet/gum) for styled output, spinners, and prompts when available, with plain-text fallbacks.
 
 ## Naming conventions
 
 ### Approved verbs
-
-Scripts and functions use a standard set of verbs as their first word. This keeps naming predictable and makes commands discoverable.
 
 | Verb | Meaning | Use when... |
 |------|---------|-------------|
@@ -165,13 +108,11 @@ Scripts and functions use a standard set of verbs as their first word. This keep
 | `extract` | Unpack a compressed archive | Decompressing tarballs, zips |
 | `sync` | Bidirectional reconciliation | *(reserved for future use)* |
 
-Names that don't fit the verb-noun pattern (tool integrations, utilities) are fine — just note the exception in the table above.
-
 ### Command names
 
 | Context | Convention | Examples |
 |---------|-----------|----------|
-| Scripts in `~/.local/bin/` | `verb-noun` in `kebab-case` | `clean-deps`, `get-ses-prod-access-status` |
+| Scripts in `~/.local/bin/` | `verb-noun` in `kebab-case` | `clean-deps`, `brew-groups` |
 | Inline shell functions | `verb_noun` in `snake_case` | `refresh_github_token()`, `extract()` |
 | Aliases | short mnemonic | `espansoconfig` |
 
@@ -215,7 +156,7 @@ Names that don't fit the verb-noun pattern (tool integrations, utilities) are fi
 | **`promptStringOnce`** | Chezmoi template function that prompts the user once during `chezmoi init` and caches the answer in `chezmoi.toml`. |
 | **`.chezmoiscripts/`** | Directory for lifecycle scripts that don't create corresponding directories in the target. |
 | **`.chezmoiignore`** | Patterns for files in the source that chezmoi should not manage. Supports templates for conditional ignoring. |
-| **`gum`** | [charmbracelet/gum](https://github.com/charmbracelet/gum) — a CLI tool for styled output (`log`, `style`), spinners (`spin`), confirmation prompts (`confirm`), and tables (`table`). Bootstrapped via `run_once_before_install-gum.sh.tmpl`; all scripts fall back to plain text when gum is absent. |
+| **`gum`** | [charmbracelet/gum](https://github.com/charmbracelet/gum) — a CLI tool for styled output, spinners, confirmation prompts, and tables. All scripts fall back to plain text when gum is absent. |
 
 ## Daily workflow
 
