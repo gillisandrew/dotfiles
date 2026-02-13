@@ -33,10 +33,45 @@ fi
 unset _shell_cache_dir
 unset -f _cached_init
 
-if type brew &> /dev/null; then
-  if brew command command-not-found-init > /dev/null 2>&1; then
-    eval "$(brew command-not-found-init)";
-  fi
-fi
+if command -v brew >/dev/null 2>&1; then
+  _dotfiles_command_not_found() {
+    local cmd="$1"; shift
+
+    # Skip inside Midnight Commander or non-interactive pipes
+    if [[ -n "${MC_SID}" ]] || [[ ! -t 1 ]]; then
+      echo "${cmd}: command not found" >&2
+      return 127
+    fi
+
+    local formula
+    formula="$(brew which-formula --skip-update "${cmd}" 2>/dev/null)"
+
+    if [[ -z "${formula}" ]]; then
+      echo "${cmd}: command not found" >&2
+      return 127
+    fi
+
+    echo "brew: \"${cmd}\" is provided by \"${formula}\"" >&2
+
+    local do_install=false
+    if command -v gum >/dev/null 2>&1 && [[ -t 0 ]]; then
+      gum confirm "Install ${formula}?" && do_install=true
+    else
+      printf "Install %s? [y/N] " "${formula}" >&2
+      local reply; read -r reply
+      [[ "$reply" =~ ^[Yy] ]] && do_install=true
+    fi
+
+    if [[ "${do_install}" == true ]]; then
+      brew install "${formula}" && command "${cmd}" "$@"
+      return $?
+    fi
+
+    return 127
+  }
+
+{{ if eq . "zsh" }}  command_not_found_handler() { _dotfiles_command_not_found "$@"; }
+{{ else }}  command_not_found_handle() { _dotfiles_command_not_found "$@"; }
+{{ end }}fi
 
 . "$HOME/.local/bin/dotfiles-motd-fast"
