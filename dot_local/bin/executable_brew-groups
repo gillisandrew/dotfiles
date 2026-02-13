@@ -7,15 +7,6 @@ has_gum() { command -v gum >/dev/null 2>&1; }
 log_info()  { if has_gum; then gum log --level info  "$@"; else echo "[INFO]  $*"; fi; }
 log_warn()  { if has_gum; then gum log --level warn  "$@"; else echo "[WARN]  $*"; fi; }
 
-spin() {
-  local title="$1"; shift
-  if has_gum && [[ -t 1 ]]; then
-    gum spin --spinner dot --title "$title" -- "$@"
-  else
-    echo "$title"; "$@"
-  fi
-}
-
 CONFIG_FILE="$HOME/.config/brew-groups"
 BREWFILE="$HOME/.Brewfile"
 
@@ -30,18 +21,19 @@ if [[ ! -f "$BREWFILE" ]]; then
   exit 1
 fi
 
-declare -A GROUP_DESCS
-GROUPS=()
+# Parallel indexed arrays (avoids declare -A portability issues)
+GROUP_NAMES=()
+GROUP_DESCS=()
 while IFS= read -r line; do
+  # Strip trailing \r (CRLF from git checkout)
+  line="${line%$'\r'}"
   if [[ "$line" =~ ^#\ ===\ ([a-z_]+):\ (.+)\ ===$ ]]; then
-    name="${BASH_REMATCH[1]}"
-    desc="${BASH_REMATCH[2]}"
-    GROUPS+=("$name")
-    GROUP_DESCS["$name"]="$desc"
+    GROUP_NAMES+=("${BASH_REMATCH[1]}")
+    GROUP_DESCS+=("${BASH_REMATCH[2]}")
   fi
 done < "$BREWFILE"
 
-if [[ ${#GROUPS[@]} -eq 0 ]]; then
+if [[ ${#GROUP_NAMES[@]} -eq 0 ]]; then
   log_warn "No groups found in $BREWFILE"
   exit 1
 fi
@@ -50,25 +42,33 @@ fi
 CURRENT=()
 if [[ -f "$CONFIG_FILE" ]]; then
   while IFS= read -r line; do
+    line="${line%$'\r'}"
     line="${line// /}"
     [[ -n "$line" ]] && CURRENT+=("$line")
   done < "$CONFIG_FILE"
 fi
+
+# Helper: check if a value is in CURRENT
+is_enabled() {
+  local needle="$1"
+  local c
+  for c in "${CURRENT[@]+"${CURRENT[@]}"}"; do
+    [[ "$c" == "$needle" ]] && return 0
+  done
+  return 1
+}
 
 # --- Interactive selection ---
 if has_gum && [[ -t 0 ]]; then
   # Build options with descriptions
   OPTIONS=()
   SELECTED=()
-  for g in "${GROUPS[@]}"; do
-    label="$g — ${GROUP_DESCS[$g]}"
+  for i in "${!GROUP_NAMES[@]}"; do
+    label="${GROUP_NAMES[$i]} — ${GROUP_DESCS[$i]}"
     OPTIONS+=("$label")
-    for c in "${CURRENT[@]}"; do
-      if [[ "$c" == "$g" ]]; then
-        SELECTED+=("$label")
-        break
-      fi
-    done
+    if is_enabled "${GROUP_NAMES[$i]}"; then
+      SELECTED+=("$label")
+    fi
   done
 
   # Build --selected flag
@@ -100,18 +100,16 @@ else
   # Plain text fallback
   echo "Available brew groups (core is always included):"
   echo ""
-  for g in "${GROUPS[@]}"; do
+  for i in "${!GROUP_NAMES[@]}"; do
     marker=" "
-    for c in "${CURRENT[@]}"; do
-      [[ "$c" == "$g" ]] && marker="*"
-    done
-    echo "  [$marker] $g — ${GROUP_DESCS[$g]}"
+    is_enabled "${GROUP_NAMES[$i]}" && marker="*"
+    echo "  [$marker] ${GROUP_NAMES[$i]} — ${GROUP_DESCS[$i]}"
   done
   echo ""
   echo "Enter group names separated by spaces (or 'all' for everything):"
   read -r INPUT
   if [[ "$INPUT" == "all" ]]; then
-    RESULT=("${GROUPS[@]}")
+    RESULT=("${GROUP_NAMES[@]}")
   else
     read -ra RESULT <<< "$INPUT"
   fi
