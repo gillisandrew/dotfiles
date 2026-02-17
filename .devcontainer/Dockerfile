@@ -10,4 +10,3 @@ FROM buildpack-deps:${VARIANT}-curl
 RUN apt-get update && export DEBIAN_FRONTEND=noninteractive \
     && apt-get upgrade -y \
     && rm -rf /var/lib/apt/lists/*
-COPY --chmod=0755 init.sh /usr/local/bin/init.sh

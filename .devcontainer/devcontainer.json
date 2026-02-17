@@ -16,8 +16,10 @@
       "version": "latest",
       "ppa": "false"
     },
-    "ghcr.io/devcontainers-contrib/features/homebrew-package:1": {}
+    "ghcr.io/devcontainers-extra/features/homebrew-package:1": {
+      "package": "chezmoi"
+    }
   },
-  "postStartCommand": "/usr/local/bin/init.sh",
+  "postStartCommand": "curl -fsSL https://raw.githubusercontent.com/gillisandrew/dotfiles/refs/heads/main/install.sh | zsh",
   "remoteUser": "vscode"
 }
