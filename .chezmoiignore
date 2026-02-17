@@ -4,6 +4,7 @@ install.sh
 .gitleaks.toml
 README.md
 docs/
+.devcontainer/
 
 {{ if ne .chezmoi.os "darwin" }}
 .config/ghostty
