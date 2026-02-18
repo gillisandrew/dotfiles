@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/src/bin/env zsh
 # Bootstrap script for dotfiles environments.
 # Installs Homebrew, chezmoi, applies dotfiles, and runs brew bundle.
 # Safe to re-run — each step is idempotent.
@@ -31,7 +31,7 @@ if ! command -v brew >/dev/null 2>&1; then
   if [ "$DOTFILES_OS" = "macos" ]; then
     eval "$(/opt/homebrew/bin/brew shellenv)"
   else
-    eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
+    eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv zsh)"
   fi
 else
   echo "==> Homebrew already installed"
