@@ -5,6 +5,18 @@ fi
 [ "$(command -v curlie)" ] && alias curl="curlie"
 [ "$(command -v bat)" ] && alias cat="bat"
 
+alias ..='cd ..'
+alias ...='cd ../..'
+alias la='ls -la'
+
+alias c='claude --model opus'
+alias ch='claude --model haiku'
+alias cs='claude --model sonnet'
+alias ch-commit='claude --model haiku --dangerously-skip-permissions --print '\''stage and commit pending git changes. If a precommit check fails, report back to the user. Do not attempt to fix. Report back with the commit sha and the full commit message.'\'' | glow -'
+alias cs-docs-gen='claude --model sonnet --system-prompt '\''Generate API docs in OpenAPI 3.0 format'\'' --allowed-tools '\''Read,Grep,Write'\'''
+alias cs-sec-scan='claude --model sonnet --system-prompt '\''Security audit focusing on OWASP Top 10'\'' --allowed-tools '\''Read,Grep'\'''
+alias cs-test-gen='claude --model sonnet --system-prompt '\''Generate comprehensive tests with full coverage'\'''
+
 . "$HOME/.local/share/shell/functions.sh"
 
 export CARAPACE_BRIDGES='zsh,fish,bash,inshellisense' # optional

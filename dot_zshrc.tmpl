@@ -14,6 +14,15 @@ else
   compinit     # full rebuild
 fi
 
+# History
+HISTSIZE=10000
+SAVEHIST=10000
+HISTFILE="$HOME/.zsh_history"
+mkdir -p "$(dirname "$HISTFILE")"
+setopt HIST_FCNTL_LOCK HIST_IGNORE_DUPS HIST_IGNORE_SPACE SHARE_HISTORY
+setopt NO_APPEND_HISTORY NO_EXTENDED_HISTORY NO_HIST_EXPIRE_DUPS_FIRST
+setopt NO_HIST_FIND_NO_DUPS NO_HIST_IGNORE_ALL_DUPS NO_HIST_SAVE_NO_DUPS
+
 if [ "$DOTFILES_OS" = "macos" ]; then
   _brew_prefix="/opt/homebrew"
 elif [ "$DOTFILES_OS" = "linux" ]; then
@@ -24,5 +33,8 @@ if [ -n "$_brew_prefix" ]; then
   [ -f "$_brew_prefix/share/zsh-autosuggestions/zsh-autosuggestions.zsh" ] && source "$_brew_prefix/share/zsh-autosuggestions/zsh-autosuggestions.zsh"
 fi
 unset _brew_prefix
+
+ZSH_AUTOSUGGEST_STRATEGY=(history)
+ZSH_HIGHLIGHT_HIGHLIGHTERS=(main)
 
 {{ template "rc-common" "zsh" }}

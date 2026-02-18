@@ -11,12 +11,7 @@
       "userUid": "1000",
       "userGid": "1000",
       "upgradePackages": "true"
-    },
-    "ghcr.io/devcontainers/features/git:1": {
-      "version": "latest",
-      "ppa": "false"
     }
   },
-  "postStartCommand": "curl -fsSL https://raw.githubusercontent.com/gillisandrew/dotfiles/refs/heads/main/install.sh | zsh",
   "remoteUser": "vscode"
 }

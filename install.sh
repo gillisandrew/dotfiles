@@ -31,7 +31,7 @@ if ! command -v brew >/dev/null 2>&1; then
   if [ "$DOTFILES_OS" = "macos" ]; then
     eval "$(/opt/homebrew/bin/brew shellenv)"
   else
-    eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv zsh)"
+    eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
   fi
 else
   echo "==> Homebrew already installed"
@@ -47,7 +47,9 @@ fi
 
 # --- Apply dotfiles ---
 echo "==> Applying dotfiles..."
-chezmoi init --apply gillisandrew
+# POSIX way to get script's dir: https://stackoverflow.com/a/29834779/12156188
+script_dir="$(cd -P -- "$(dirname -- "$(command -v -- "$0")")" && pwd -P)"
+chezmoi init --apply "--source=$script_dir"
 
 # --- Install packages from Brewfile.d ---
 BREWFILE_DIR="$HOME/.Brewfile.d"
