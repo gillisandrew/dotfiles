@@ -10,7 +10,21 @@
       "username": "vscode",
       "userUid": "1000",
       "userGid": "1000",
-      "upgradePackages": "true"
+      "upgradePackages": "true",
+      "installOhMyZsh": "false",
+      "installOhMyZshConfig": "false"
+    }
+  },
+  "customizations": {
+    "vscode": {
+      "settings": {
+        "terminal.integrated.defaultProfile.linux": "zsh",
+        "terminal.integrated.profiles.linux": {
+          "zsh": {
+            "path": "zsh"
+          }
+        }
+      }
     }
   },
   "remoteUser": "vscode"
