@@ -16,9 +16,7 @@ alias la='ls -la'
 alias c='claude --model opus'
 alias ch='claude --model haiku'
 alias cs='claude --model sonnet'
-alias ch-commit='claude --model haiku --dangerously-skip-permissions --print '\''Stage and commit pending git changes in one or more atomic commits. If a precommit check fails, report back to the user. Do not attempt to fix.
-
-Output format:
+alias ch-commit='claude --model haiku --dangerously-skip-permissions --print '\''Stage and commit pending git changes in one or more atomic commits. If a precommit check fails, report back to the user. Do not attempt to fix. For each commit out put the following, seperated by `---`:
 
 ## <conventional commit type>: <subject>
 
