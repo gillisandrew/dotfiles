@@ -16,7 +16,7 @@ alias la='ls -la'
 alias c='claude --model opus'
 alias ch='claude --model haiku'
 alias cs='claude --model sonnet'
-alias ch-commit='claude --model haiku --dangerously-skip-permissions --print '\''Stage and commit pending git changes. If a precommit check fails, report back to the user. Do not attempt to fix.
+alias ch-commit='claude --model haiku --dangerously-skip-permissions --print '\''Stage and commit pending git changes in one or more atomic commits. If a precommit check fails, report back to the user. Do not attempt to fix.
 
 Output format:
 
@@ -32,6 +32,8 @@ Output format:
 alias cs-docs-gen='claude --model sonnet --system-prompt '\''Generate API docs in OpenAPI 3.0 format'\'' --allowed-tools '\''Read,Grep,Write'\'''
 alias cs-sec-scan='claude --model sonnet --system-prompt '\''Security audit focusing on OWASP Top 10'\'' --allowed-tools '\''Read,Grep'\'''
 alias cs-test-gen='claude --model sonnet --system-prompt '\''Generate comprehensive tests with full coverage'\'''
+alias init='chezmoi init --apply'
+
 
 . "$HOME/.local/share/shell/functions.sh"
 
