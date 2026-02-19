@@ -37,7 +37,10 @@
 {{-   end -}}
 {{- end -}}
 
-{{- $selected := promptMultichoice "Brew groups to install" $brewGroups $defaultSelected -}}
+{{- $selected := $defaultSelected -}}
+{{- if stdinIsATTY -}}
+{{-   $selected = promptMultichoice "Brew groups to install" $brewGroups $defaultSelected -}}
+{{- end -}}
 
 [data]
   email = {{ $email | quote }}
