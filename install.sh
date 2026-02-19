@@ -63,6 +63,15 @@ fi
 echo "==> Applying dotfiles..."
 # POSIX way to get script's dir: https://stackoverflow.com/a/29834779/12156188
 script_dir="$(cd -P -- "$(dirname -- "$(command -v -- "$0")")" && pwd -P)"
+
+# Symlink source dir so chezmoi reuses this repo instead of cloning a second copy
+chezmoi_source="$HOME/.local/share/chezmoi"
+if [ "$script_dir" != "$chezmoi_source" ]; then
+  mkdir -p "$(dirname "$chezmoi_source")"
+  ln -snf "$script_dir" "$chezmoi_source"
+  echo "==> Linked $chezmoi_source -> $script_dir"
+fi
+
 chezmoi init --apply "--source=$script_dir"
 
 echo "==> Bootstrap complete ($DOTFILES_ENV)"
