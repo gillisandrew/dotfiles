@@ -54,18 +54,10 @@ In devcontainers, only `core` is installed.
 
 **Installing packages:**
 
+Brew groups are selected during `chezmoi init` via an interactive multi-select prompt. To change your selection or sync packages, run:
+
 ```bash
-# Interactive picker (uses gum if available, plain text fallback)
-brew-groups
-
-# Install specific roles
-brew-groups core dev
-
-# Install everything
-brew-groups --all
-
-# Or run brew bundle directly
-brew bundle --file=~/.Brewfile.d/core
+chezmoi apply
 ```
 
 ## Shell setup
@@ -90,7 +82,6 @@ To re-generate profiles (e.g. after accounts are added/removed), just run `refre
 
 | Command | Description |
 |---------|-------------|
-| `brew-groups` | Install packages by role from `~/.Brewfile.d/`. Interactive picker, or pass role names / `--all`. |
 | `clean-deps` | Remove build artifacts (`node_modules`, `dist`, `.venv`, etc.). Dry-run by default; `--force` to delete. |
 | `clean-package-cache` | Purge caches for npm, pip, uv, go, cargo, terraform, and more. Dry-run by default; `--force` to execute. |
 | `dotfiles-env` | Detect environment (`DOTFILES_OS`, `DOTFILES_ENV`). Sourced by shell configs. |
@@ -118,7 +109,7 @@ Scripts use [gum](https://github.com/charmbracelet/gum) for styled output, spinn
 
 | Context | Convention | Examples |
 |---------|-----------|----------|
-| Scripts in `~/.local/bin/` | `verb-noun` in `kebab-case` | `clean-deps`, `brew-groups` |
+| Scripts in `~/.local/bin/` | `verb-noun` in `kebab-case` | `clean-deps`, `refresh-zorg-profiles` |
 | Inline shell functions | `verb_noun` in `snake_case` | `refresh_github_token()`, `extract()` |
 | Aliases | short mnemonic | `espansoconfig` |
 

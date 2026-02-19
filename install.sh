@@ -1,4 +1,4 @@
-#!/src/bin/env zsh
+#!/usr/bin/env bash
 # Bootstrap script for dotfiles environments.
 # Installs Homebrew, chezmoi, applies dotfiles, and runs brew bundle.
 # Safe to re-run — each step is idempotent.
@@ -46,25 +46,11 @@ else
 fi
 
 # --- Apply dotfiles ---
+# chezmoi init prompts for brew group selection, applies all dotfiles,
+# then runs brew bundle --global + cleanup via run_onchange_after_brew-install.sh
 echo "==> Applying dotfiles..."
 # POSIX way to get script's dir: https://stackoverflow.com/a/29834779/12156188
 script_dir="$(cd -P -- "$(dirname -- "$(command -v -- "$0")")" && pwd -P)"
 chezmoi init --apply "--source=$script_dir"
-
-# --- Install packages from Brewfile.d ---
-BREWFILE_DIR="$HOME/.Brewfile.d"
-if [ -d "$BREWFILE_DIR" ]; then
-  if [ "$DOTFILES_ENV" = "devcontainer" ]; then
-    echo "==> Installing core packages (devcontainer)..."
-    brew bundle --file="$BREWFILE_DIR/core"
-  else
-    echo "==> Installing all package roles..."
-    for f in "$BREWFILE_DIR"/*; do
-      [ -f "$f" ] && brew bundle --file="$f"
-    done
-  fi
-else
-  echo "==> No ~/.Brewfile.d/ found, skipping brew bundle"
-fi
 
 echo "==> Bootstrap complete ($DOTFILES_ENV)"

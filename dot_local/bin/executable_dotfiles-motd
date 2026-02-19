@@ -178,7 +178,7 @@ ${_motd_role_lines}"
     --no-strip-ansi
 
   if [ "$_motd_has_missing" = true ]; then
-    gum style --faint --italic '  run "brew-groups" to install missing roles'
+    gum style --faint --italic '  run "chezmoi apply" to sync packages'
   fi
   echo ""
 else
@@ -198,7 +198,7 @@ else
     printf '%s' "$_motd_role_lines_plain"
     if [ "$_motd_has_missing" = true ]; then
       echo ""
-      echo "  run \"brew-groups\" to install missing roles"
+      echo "  run \"chezmoi apply\" to sync packages"
     fi
   fi
   echo ""
