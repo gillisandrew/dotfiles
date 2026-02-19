@@ -47,18 +47,12 @@ fi
 
 # --- Devcontainer: fix ZDOTDIR so zsh loads $HOME/.zshrc ---
 if [ "$DOTFILES_ENV" = "devcontainer" ] && [ -f /etc/zsh/zshenv ]; then
-  if ! grep -q '__HOME_ZSHRC_SOURCED' /etc/zsh/zshenv 2>/dev/null; then
+  if ! grep -q 'ZDOTDIR="\$HOME"' /etc/zsh/zshenv 2>/dev/null; then
     echo "==> Patching /etc/zsh/zshenv for devcontainer ZDOTDIR..."
     sudo tee -a /etc/zsh/zshenv >/dev/null <<'ZSHENV'
 
-# Always use $HOME for ZDOTDIR
+# Point ZDOTDIR to $HOME so zsh finds our dotfiles (.zshenv, .zprofile, .zshrc)
 export ZDOTDIR="$HOME"
-
-# Load home .zshrc for interactive shells
-if [[ -o interactive ]] && [[ -r "$HOME/.zshrc" ]] && [[ -z "$__HOME_ZSHRC_SOURCED" ]]; then
-  export __HOME_ZSHRC_SOURCED=1
-  source "$HOME/.zshrc"
-fi
 ZSHENV
   fi
 fi
