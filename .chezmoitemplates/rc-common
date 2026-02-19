@@ -9,7 +9,8 @@ alias ..='cd ..'
 alias ...='cd ../..'
 export CLICOLOR=1
 export LSCOLORS=ExFxCxDxBxegedabagacad
-alias ls='ls --color=auto'
+
+alias ls='ls --color=auto -G'
 alias la='ls -la'
 
 alias c='claude --model opus'
