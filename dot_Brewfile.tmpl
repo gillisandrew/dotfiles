@@ -3,16 +3,16 @@
 
 {{- range glob (printf "%s/dot_Brewfile.d/*" .chezmoi.sourceDir) -}}
 {{-   $group := base . -}}
-{{-   if and (ne $group "core") (not (contains "." $group)) (index $.brew $group) }}
+{{-   if and (ne $group "core") (not (contains "." $group)) (has $group $.brew.groups) }}
 # {{ $group }}
 {{ include (printf "dot_Brewfile.d/%s" $group) -}}
 {{   end -}}
 {{- end -}}
 
-{{- if index $.brew "vscode" -}}
+{{- if has "vscode" $.brew.groups -}}
 {{-   range glob (printf "%s/dot_Brewfile.d/*.vscode" .chezmoi.sourceDir) -}}
 {{-     $group := trimSuffix ".vscode" (base .) -}}
-{{-     if index $.brew $group }}
+{{-     if has $group $.brew.groups }}
 # vscode ({{ $group }})
 {{ include (printf "dot_Brewfile.d/%s.vscode" $group) -}}
 {{     end -}}

@@ -96,12 +96,14 @@ if command -v gum >/dev/null 2>&1 && [ -t 1 ]; then
     --border-foreground 62 \
     --padding "0 1" \
     --no-strip-ansi
+  gum style --faint --italic '  chezmoi init --force  to configure brew groups'
   echo ""
 else
   echo ""
   echo "$_motd_host | ${DOTFILES_ENV:-unknown} | $_motd_shell"
   echo "up $_motd_uptime | load $_motd_load | mem $_motd_mem | disk $_motd_disk"
   [ -n "$_motd_local_ip" ] && echo "lan $_motd_local_ip"
+  echo "  chezmoi init --force  to configure brew groups"
   echo ""
 fi
 

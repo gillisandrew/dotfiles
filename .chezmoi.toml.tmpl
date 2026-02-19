@@ -16,17 +16,13 @@
 {{-   end -}}
 {{- end -}}
 
-{{- /* Derive default selection from existing individual booleans (migration path from old config) */ -}}
+{{- /* Default to existing selection if re-running init */ -}}
 {{- $defaultSelected := list -}}
 {{- if hasKey . "brew" -}}
-{{-   range $brewGroups -}}
-{{-     if index $.brew . -}}
-{{-       $defaultSelected = append $defaultSelected . -}}
-{{-     end -}}
+{{-   if hasKey .brew "groups" -}}
+{{-     $defaultSelected = .brew.groups -}}
 {{-   end -}}
 {{- end -}}
-
-{{- $selected := list -}}
 
 {{- if $codespaces -}}
 {{-   $email = coalesce (env "GIT_AUTHOR_EMAIL") (env "GIT_COMMITTER_EMAIL") "gillis.andrew@gmail.com" -}}
@@ -39,14 +35,9 @@
 {{-     $awsSsoRegion = promptStringOnce . "aws.sso_region" "AWS SSO region" "us-east-1" -}}
 {{-     $awsSsoRoleName = promptStringOnce . "aws.sso_role_name" "AWS SSO role name" "AdministratorAccess" -}}
 {{-   end -}}
-{{-   $selected = promptMultichoiceOnce . "brew.groups" "Brew groups to install" $brewGroups $defaultSelected -}}
 {{- end -}}
 
-{{- /* Build per-group booleans from selected list */ -}}
-{{- $brewConfig := dict -}}
-{{- range $brewGroups -}}
-{{-   $_ := set $brewConfig . (has . $selected) -}}
-{{- end -}}
+{{- $selected := promptMultichoice "Brew groups to install" $brewGroups $defaultSelected -}}
 
 [data]
   email = {{ $email | quote }}
@@ -60,6 +51,4 @@
   sso_role_name = {{ $awsSsoRoleName | quote }}
 
 [data.brew]
-{{- range (keys $brewConfig | sortAlpha) }}
-  {{ . }} = {{ index $brewConfig . }}
-{{- end }}
+  groups = {{ $selected | toToml }}
