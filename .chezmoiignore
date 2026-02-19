@@ -11,6 +11,7 @@ docs/
 .config/ghostty
 .config/zed
 .config/espanso
+.ssh/BW-2026-02-10-AUTH.pub
 {{ end }}
 
 {{ if not .aws.enabled }}
