@@ -45,6 +45,24 @@ else
   echo "==> chezmoi already installed"
 fi
 
+# --- Devcontainer: fix ZDOTDIR so zsh loads $HOME/.zshrc ---
+if [ "$DOTFILES_ENV" = "devcontainer" ] && [ -f /etc/zsh/zshenv ]; then
+  if ! grep -q '__HOME_ZSHRC_SOURCED' /etc/zsh/zshenv 2>/dev/null; then
+    echo "==> Patching /etc/zsh/zshenv for devcontainer ZDOTDIR..."
+    sudo tee -a /etc/zsh/zshenv >/dev/null <<'ZSHENV'
+
+# Always use $HOME for ZDOTDIR
+export ZDOTDIR="$HOME"
+
+# Load home .zshrc for interactive shells
+if [[ -o interactive ]] && [[ -r "$HOME/.zshrc" ]] && [[ -z "$__HOME_ZSHRC_SOURCED" ]]; then
+  export __HOME_ZSHRC_SOURCED=1
+  source "$HOME/.zshrc"
+fi
+ZSHENV
+  fi
+fi
+
 # --- Apply dotfiles ---
 # chezmoi init prompts for brew group selection, applies all dotfiles,
 # then runs brew bundle --global + cleanup via run_onchange_after_brew-install.sh
