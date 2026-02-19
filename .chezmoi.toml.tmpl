@@ -11,7 +11,7 @@
 {{- $brewGroups := list -}}
 {{- range glob (printf "%s/dot_Brewfile.d/*" .chezmoi.sourceDir) -}}
 {{-   $name := base . -}}
-{{-   if ne $name "core" -}}
+{{-   if and (ne $name "core") (not (contains "." $name)) -}}
 {{-     $brewGroups = append $brewGroups $name -}}
 {{-   end -}}
 {{- end -}}
