@@ -18,9 +18,11 @@
 
 {{- /* Derive default selection from existing individual booleans (migration path from old config) */ -}}
 {{- $defaultSelected := list -}}
-{{- range $brewGroups -}}
-{{-   if index $.brew . -}}
-{{-     $defaultSelected = append $defaultSelected . -}}
+{{- if hasKey . "brew" -}}
+{{-   range $brewGroups -}}
+{{-     if index $.brew . -}}
+{{-       $defaultSelected = append $defaultSelected . -}}
+{{-     end -}}
 {{-   end -}}
 {{- end -}}
 
