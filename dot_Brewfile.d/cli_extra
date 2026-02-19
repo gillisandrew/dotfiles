@@ -1,0 +1,3 @@
+brew "zsh-syntax-highlighting"
+brew "zsh-autosuggestions"
+brew "uutils-coreutils"

@@ -1,0 +1,47 @@
+# core (always enabled)
+{{ include "dot_Brewfile.d/core" -}}
+
+{{ if has "cli" .brew.groups -}}
+# cli
+{{ include "dot_Brewfile.d/cli" -}}
+{{ end -}}
+
+{{ if has "dev" .brew.groups -}}
+# dev
+{{ include "dot_Brewfile.d/dev" -}}
+{{ end -}}
+
+{{ if has "go" .brew.groups -}}
+# go
+{{ include "dot_Brewfile.d/go" -}}
+{{ end -}}
+
+{{ if has "js" .brew.groups -}}
+# js
+{{ include "dot_Brewfile.d/js" -}}
+{{ end -}}
+
+{{ if has "macos_apps" .brew.groups -}}
+# macos_apps
+{{ include "dot_Brewfile.d/macos_apps" -}}
+{{ end -}}
+
+{{ if has "macos_cli" .brew.groups -}}
+# macos_cli
+{{ include "dot_Brewfile.d/macos_cli" -}}
+{{ end -}}
+
+{{ if has "ops" .brew.groups -}}
+# ops
+{{ include "dot_Brewfile.d/ops" -}}
+{{ end -}}
+
+{{ if has "python" .brew.groups -}}
+# python
+{{ include "dot_Brewfile.d/python" -}}
+{{ end -}}
+
+{{ if has "rust" .brew.groups -}}
+# rust
+{{ include "dot_Brewfile.d/rust" -}}
+{{ end -}}

@@ -1,0 +1,7 @@
+{{- if not .codespaces -}}
+#!/bin/bash
+# Brew groups: {{ .brew.groups | toJson }}
+set -euo pipefail
+
+brew bundle --global
+{{ end -}}
