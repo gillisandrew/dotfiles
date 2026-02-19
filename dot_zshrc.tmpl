@@ -7,6 +7,13 @@
 
 . "$HOME/.local/bin/dotfiles-env"
 
+# Non-login interactive shells (e.g. VSCode terminals) skip .zprofile,
+# so source it here to get brew PATH and toolchain setup.
+if [[ ! -o login ]] && [[ -z "$__PROFILE_SOURCED" ]]; then
+  export __PROFILE_SOURCED=1
+  [[ -f "$HOME/.zprofile" ]] && . "$HOME/.zprofile"
+fi
+
 autoload -Uz compinit
 if [[ -f ~/.zcompdump && $(date +'%j') == $(stat -f '%Sm' -t '%j' ~/.zcompdump 2>/dev/null) ]]; then
   compinit -C  # use cached dump (skips security check + regeneration)
