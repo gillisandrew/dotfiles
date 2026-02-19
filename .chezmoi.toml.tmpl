@@ -6,7 +6,21 @@
 {{- $awsSsoStartUrl := "" -}}
 {{- $awsSsoRegion := "" -}}
 {{- $awsSsoRoleName := "" -}}
+
+{{- /* Discover brew groups from source directory, excluding core */ -}}
 {{- $brewGroups := list -}}
+{{- range glob (printf "%s/dot_Brewfile.d/*" .chezmoi.sourceDir) -}}
+{{-   $name := base . -}}
+{{-   if ne $name "core" -}}
+{{-     $brewGroups = append $brewGroups $name -}}
+{{-   end -}}
+{{- end -}}
+
+{{- /* Default all groups to false */ -}}
+{{- $brewConfig := dict -}}
+{{- range $brewGroups -}}
+{{-   $_ := set $brewConfig . false -}}
+{{- end -}}
 
 {{- if $codespaces -}}
 {{-   $email = coalesce (env "GIT_AUTHOR_EMAIL") (env "GIT_COMMITTER_EMAIL") "gillis.andrew@gmail.com" -}}
@@ -19,7 +33,9 @@
 {{-     $awsSsoRegion = promptStringOnce . "aws.sso_region" "AWS SSO region" "us-east-1" -}}
 {{-     $awsSsoRoleName = promptStringOnce . "aws.sso_role_name" "AWS SSO role name" "AdministratorAccess" -}}
 {{-   end -}}
-{{-   $brewGroups = promptMultichoiceOnce . "brew.groups" "Brew groups to install (space to toggle, enter to confirm)" (list "cli" "dev" "go" "js" "macos_apps" "macos_cli" "ops" "python" "rust") -}}
+{{-   range $brewGroups -}}
+{{-     $_ := set $brewConfig . (promptBoolOnce $ (printf "brew.%s" .) (printf "Install brew group: %s" .) false) -}}
+{{-   end -}}
 {{- end -}}
 
 [data]
@@ -34,4 +50,6 @@
   sso_role_name = {{ $awsSsoRoleName | quote }}
 
 [data.brew]
-  groups = {{ $brewGroups | toJson }}
+{{- range (keys $brewConfig | sortAlpha) }}
+  {{ . }} = {{ index $brewConfig . }}
+{{- end }}

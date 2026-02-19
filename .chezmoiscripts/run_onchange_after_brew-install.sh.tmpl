@@ -1,7 +1,8 @@
 {{- if not .codespaces -}}
 #!/bin/bash
-# Brew groups: {{ .brew.groups | toJson }}
+# brew:{{ range (keys .brew | sortAlpha) }} {{ . }}={{ index $.brew . }}{{ end }}
 set -euo pipefail
 
 brew bundle --global
+brew bundle cleanup --global --force
 {{ end -}}
