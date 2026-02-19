@@ -1,4 +1,11 @@
 # =========================================
+# GitHub — PTR record doesn't match hostname
+# =========================================
+Host github.com
+    CheckHostIP no
+    VerifyHostKeyDNS no
+
+# =========================================
 # Global defaults — apply to all hosts
 # =========================================
 Host *
@@ -41,9 +48,4 @@ Host *
     # Log level (raise to DEBUG temporarily if troubleshooting)
     LogLevel VERBOSE
 
-# =========================================
-# GitHub — PTR record doesn't match hostname
-# =========================================
-Host github.com
-    CheckHostIP no
-    VerifyHostKeyDNS no
+
