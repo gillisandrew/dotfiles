@@ -1,4 +1,2 @@
 brew "trash"
 brew "yubico-piv-tool"
-brew "zsh-syntax-highlighting"
-brew "zsh-autosuggestions"

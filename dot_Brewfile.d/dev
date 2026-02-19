@@ -1,7 +1,4 @@
-tap "withgraphite/tap"
-brew "beads"
 brew "git-filter-repo"
 brew "gitleaks"
 brew "pre-commit"
 brew "tmux"
-brew "withgraphite/tap/graphite"

@@ -76,26 +76,14 @@ add_profiles_to_config() {
       "$account_name" "$AWS_SSO_SESSION" "$account_id" "$AWS_SSO_ROLE_NAME" "$AWS_SSO_REGION" >> "$config_file"
   done
 
-  # Build CSV for gum table or fallback
-  local csv="Account ID,Account Name"
+  echo ""
+  echo "Account ID   | Account Name"
+  echo "============ | ============================="
   for entry in $accounts; do
     local account_name="${entry%%:*}"
     local account_id="${entry##*:}"
-    csv+=$'\n'"${account_id},${account_name}"
+    echo "$account_id | $account_name"
   done
-
-  echo ""
-  if has_gum && [[ -t 1 ]]; then
-    echo "$csv" | gum table
-  else
-    echo "Account ID   | Account Name"
-    echo "============ | ============================="
-    for entry in $accounts; do
-      local account_name="${entry%%:*}"
-      local account_id="${entry##*:}"
-      echo "$account_id | $account_name"
-    done
-  fi
   echo ""
 }
 
