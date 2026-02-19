@@ -7,6 +7,9 @@ fi
 
 alias ..='cd ..'
 alias ...='cd ../..'
+export CLICOLOR=1
+export LSCOLORS=ExFxCxDxBxegedabagacad
+alias ls='ls --color=auto'
 alias la='ls -la'
 
 alias c='claude --model opus'
