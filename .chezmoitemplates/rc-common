@@ -30,6 +30,7 @@ alias ch-commit='claude --model haiku --dangerously-skip-permissions --print '\'
 alias cs-docs-gen='claude --model sonnet --system-prompt '\''Generate API docs in OpenAPI 3.0 format'\'' --allowed-tools '\''Read,Grep,Write'\'''
 alias cs-sec-scan='claude --model sonnet --system-prompt '\''Security audit focusing on OWASP Top 10'\'' --allowed-tools '\''Read,Grep'\'''
 alias cs-test-gen='claude --model sonnet --system-prompt '\''Generate comprehensive tests with full coverage'\'''
+alias c-claude-md='claude --model opus --system-prompt '\''When writing or updating CLAUDE.md: follow RED-GREEN-REFACTOR. RED — think through hypothetical scenarios: what would an agent get wrong in this project without the doc? GREEN — write minimal CLAUDE.md addressing only those specific failures. REFACTOR — dispatch 2-3 parallel subagents with realistic project tasks, cut every line they did not need, strengthen gaps, iterate until every line earns its keep or is cut.'\'' '\''Use the zw:writing-claude-md skill to update or create the CLAUDE.md file in this repo.'\'''
 alias init='chezmoi init --apply'
 
 
