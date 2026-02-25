@@ -18,31 +18,33 @@ CLAUDE.md is loaded into every conversation. Every token competes with your actu
 - Agents keep making the same mistakes in a codebase
 - Onboarding a new tool, convention, or architectural pattern
 
-## Process
+## Process: RED-GREEN-REFACTOR for Documentation
+
+Writing CLAUDE.md is TDD applied to project documentation. You write hypothetical scenarios (tests), check if an agent would succeed without the doc (RED), write the doc (GREEN), then pressure-test and pare down (REFACTOR).
 
 ```dot
 digraph writing_claude_md {
     rankdir=TB;
     node [shape=box];
 
-    explore [label="1. Explore the project\n(package.json, Makefile,\npyproject.toml, go.mod, etc.)"];
-    identify [label="2. Identify what agents\nget wrong or can't infer"];
-    draft [label="3. Draft: only non-obvious\ninformation"];
-    verify [label="4. Verify every command\nand path against the project"];
-    review [shape=diamond, label="Does each section\njustify its token cost?"];
-    cut [label="Cut or reference\nexternally"];
-    done [label="5. Commit"];
+    explore [label="1. EXPLORE\nRead actual project files"];
+    red [label="2. RED: Hypothetical scenarios\nWhat would an agent get wrong\nwithout any CLAUDE.md?"];
+    green [label="3. GREEN: Draft CLAUDE.md\nAddress only the failures\nfrom RED scenarios"];
+    verify [label="4. Verify commands/paths\nagainst actual project"];
+    refactor [shape=diamond, label="5. REFACTOR\nDispatch subagent with\nCLAUDE.md + hypothetical task.\nDoes it succeed with\nMINIMAL guidance?"];
+    cut [label="Cut bloat, strengthen\nweak spots, re-test"];
+    done [label="6. Commit"];
 
-    explore -> identify -> draft -> verify -> review;
-    review -> cut [label="no"];
-    review -> done [label="yes"];
-    cut -> review;
+    explore -> red -> green -> verify -> refactor;
+    refactor -> cut [label="too verbose\nor gaps"];
+    refactor -> done [label="lean and\nsufficient"];
+    cut -> refactor;
 }
 ```
 
-### 1. Explore First
+### 1. EXPLORE: Read the Project
 
-**Before writing a single line**, read the project's actual files:
+**Before writing a single line**, read actual files:
 - Config files: `package.json`, `Makefile`, `pyproject.toml`, `go.mod`, `Cargo.toml`, etc.
 - Existing docs: README, CONTRIBUTING, existing CLAUDE.md
 - CI config: `.github/workflows/`, `.gitlab-ci.yml`, etc.
@@ -50,11 +52,23 @@ digraph writing_claude_md {
 
 **Never fabricate paths, commands, or structure.** If you haven't read it, don't write it.
 
-If the project doesn't exist or you can't access it, say so in one sentence and stop. Don't write a lengthy explanation — just explore or ask.
+### 2. RED: Identify What Agents Get Wrong
 
-### 2. What Belongs in CLAUDE.md
+Before drafting, think through hypothetical scenarios where an agent working in this project would fail without guidance. These are your "failing tests."
 
-Only include information that meets **at least one** of:
+**Ask yourself for each area of the project:**
+- Would an agent know the correct build/test/lint commands?
+- Would an agent put new code in the right directory?
+- Would an agent follow the project's naming conventions?
+- Would an agent avoid editing generated or protected files?
+- Would an agent know the non-obvious architectural constraints?
+
+**Document specific failures**, not vague concerns:
+- "Agent would run `npm test` but the project uses `make test` which also generates fixtures"
+- "Agent would put business logic in handlers instead of domain/"
+- "Agent would edit `~/.aws/config` directly instead of using the modify script"
+
+Only information that meets **at least one** of these criteria belongs in CLAUDE.md:
 
 | Include | Example |
 |---------|---------|
@@ -63,7 +77,11 @@ Only include information that meets **at least one** of:
 | It's project-specific and non-obvious | "We use workspace protocol for shared deps" |
 | It prevents a costly mistake | "Never edit files under generated/" |
 
-### 3. What Does NOT Belong
+### 3. GREEN: Draft Minimal CLAUDE.md
+
+Write CLAUDE.md addressing **only** the failures from step 2. Don't add content for hypothetical cases you didn't identify.
+
+**What does NOT belong:**
 
 | Exclude | Why |
 |---------|-----|
@@ -75,11 +93,9 @@ Only include information that meets **at least one** of:
 | Time-sensitive information | Version numbers, dates, "current" API endpoints |
 | Anything in README or CONTRIBUTING | Reference those files, don't duplicate |
 
-### 4. Token Efficiency Techniques
-
-**Reference, don't inline:**
+**Token efficiency — reference, don't inline:**
 ```markdown
-# BAD (50 tokens burned)
+# BAD (50 tokens)
 Commit messages must follow conventional commits format:
 <type>(<scope>): <description>
 Types: feat, fix, chore, docs, refactor, test, ci, perf
@@ -88,30 +104,9 @@ Types: feat, fix, chore, docs, refactor, test, ci, perf
 Commit messages: conventional commits format.
 ```
 
-**Point to exemplars, don't describe patterns:**
-```markdown
-# BAD (100+ tokens)
-gRPC handlers should validate input, call domain service,
-translate response. Do not put business logic in handlers...
-[paragraph continues]
+**Point to exemplars, not descriptions. Use the project's own files as docs.**
 
-# GOOD (20 tokens)
-Handler pattern: follow services/users/handler.go as exemplar.
-Never put business logic in handlers — domain/ only.
-```
-
-**Use the project's own files as documentation:**
-```markdown
-# BAD
-Available commands: dev, build, test, lint, format...
-[lists every command with flags]
-
-# GOOD
-Commands: see `Makefile` (or `package.json` scripts).
-```
-
-### 5. Structure Template
-
+**Structure template:**
 ```markdown
 # CLAUDE.md
 
@@ -129,6 +124,54 @@ Commands: see `Makefile` (or `package.json` scripts).
 ```
 
 Keep total CLAUDE.md under 200 lines. If you need more, split into referenced files.
+
+### 4. Verify Commands and Paths
+
+Every command, path, and file reference in your draft must be verified against the actual project. Run commands, check paths exist, confirm file contents match your descriptions.
+
+### 5. REFACTOR: Subagent Pressure Testing
+
+This is the critical step that distinguishes good CLAUDE.md from bloated ones. Dispatch subagents with your draft CLAUDE.md and realistic project tasks. The goal is to answer two questions:
+
+1. **Is every line earning its keep?** If the agent succeeds without reading a section, cut it.
+2. **Are there gaps?** If the agent fails at something the CLAUDE.md should have prevented, strengthen it.
+
+**How to test with subagents:**
+
+Dispatch 2-3 subagents in parallel, each with a different realistic task for the project. Give each subagent the CLAUDE.md content as context and a task that exercises the non-obvious parts of the project.
+
+```
+You are working in [project]. Here is the project's CLAUDE.md:
+
+[paste draft CLAUDE.md]
+
+TASK: [realistic task that would exercise non-obvious project constraints]
+
+Think through how you would approach this task step by step.
+What commands would you run? Where would you put new code?
+What mistakes might you make?
+```
+
+**Good test tasks:**
+- Add a new feature touching the project's non-obvious build pipeline
+- Fix a bug in an area with architectural constraints
+- Add a new file following the project's conventions
+- Run the test suite and interpret results
+
+**Evaluate each subagent's response:**
+- Did it follow the correct build/test commands?
+- Did it put code in the right places?
+- Did it avoid the common mistakes?
+- Did it reference the right exemplar files?
+- Did it use information from CLAUDE.md that it couldn't have inferred?
+
+**Then pare down:**
+- Lines the agent didn't need → **cut them**
+- Lines the agent relied on and got right → **keep them**
+- Tasks where the agent still failed → **strengthen that section**
+- Sections that duplicate discoverable info → **replace with pointer**
+
+**Iterate** until the CLAUDE.md is the minimum viable documentation: every line prevents a real failure, no line is dead weight.
 
 ### 6. Maintaining Over Time
 
