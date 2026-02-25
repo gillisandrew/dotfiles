@@ -1,0 +1,9 @@
+#!/bin/zsh
+set -euo pipefail
+
+brew bundle --global
+brew bundle cleanup --global --force
+
+if command -v claude >/dev/null 2>&1; then
+  ln -sf "$(which claude)" "$HOME/.local/bin/claude"
+fi
