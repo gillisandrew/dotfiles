@@ -12,6 +12,8 @@ export GOPATH="$HOME/.local/share/go"
 export GOBIN="$HOME/.local/bin"
 export PATH="$PATH:$GOPATH/bin"
 
+[ -d "$HOME/.config/composer/vendor/bin/" ] && export PATH="$HOME/.config/composer/vendor/bin:$PATH"
+
 if [ "$DOTFILES_ENV" = "macos" ]; then
   export JAVA_HOME=$(/usr/libexec/java_home)
 fi
@@ -41,6 +43,9 @@ elif [ "$DOTFILES_OS" = "linux" ]; then
   [ -d "/home/linuxbrew/.linuxbrew/opt/rustup/bin" ] && export PATH="/home/linuxbrew/.linuxbrew/opt/rustup/bin:$PATH"
 fi
 [ -f "$HOME/.cargo/env" ] && . "$HOME/.cargo/env"
+
+# Vite+ (vp)
+[ -f "$HOME/.vite-plus/env" ] && . "$HOME/.vite-plus/env"
 
 # Common user bins
 [ -d "$HOME/.local/bin" ] && export PATH="$HOME/.local/bin:$PATH"
