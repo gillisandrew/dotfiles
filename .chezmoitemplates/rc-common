@@ -36,6 +36,10 @@ alias init='chezmoi init --apply'
 
 . "$HOME/.local/share/shell/functions.sh"
 
+# Portless: stable .localhost URLs for local dev
+export PORTLESS_PORT=443
+export PORTLESS_HTTPS=1
+
 export CARAPACE_BRIDGES='zsh,fish,bash,inshellisense' # optional
 export CARAPACE_MATCH=1
 
