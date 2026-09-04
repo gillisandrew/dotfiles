@@ -8,23 +8,6 @@
 {{- $awsSsoRoleName := "" -}}
 {{- $sentryDsn := "" -}}
 
-{{- /* Discover brew groups from source directory, excluding core and overlay files (*.vscode etc.) */ -}}
-{{- $brewGroups := list -}}
-{{- range glob (printf "%s/dot_Brewfile.d/*" .chezmoi.sourceDir) -}}
-{{-   $name := base . -}}
-{{-   if and (ne $name "core") (not (contains "." $name)) -}}
-{{-     $brewGroups = append $brewGroups $name -}}
-{{-   end -}}
-{{- end -}}
-
-{{- /* Default to existing selection if re-running init */ -}}
-{{- $defaultSelected := list -}}
-{{- if hasKey . "brew" -}}
-{{-   if hasKey .brew "groups" -}}
-{{-     $defaultSelected = .brew.groups -}}
-{{-   end -}}
-{{- end -}}
-
 {{- if $codespaces -}}
 {{-   $email = coalesce (env "GIT_AUTHOR_EMAIL") (env "GIT_COMMITTER_EMAIL") "gillis.andrew@gmail.com" -}}
 {{- else -}}
@@ -39,11 +22,6 @@
 {{-   $sentryDsn = promptStringOnce . "sentry.dsn" "Sentry DSN (claude-code-sentry-monitor; blank to disable)" -}}
 {{- end -}}
 
-{{- $selected := $defaultSelected -}}
-{{- if stdinIsATTY -}}
-{{-   $selected = promptMultichoice "Brew groups to install" $brewGroups $defaultSelected -}}
-{{- end -}}
-
 [data]
   email = {{ $email | quote }}
   codespaces = {{ $codespaces }}
@@ -54,9 +32,6 @@
   sso_start_url = {{ $awsSsoStartUrl | quote }}
   sso_region = {{ $awsSsoRegion | quote }}
   sso_role_name = {{ $awsSsoRoleName | quote }}
-
-[data.brew]
-  groups = {{ $selected | toToml }}
 
 [data.sentry]
   dsn = {{ $sentryDsn | quote }}

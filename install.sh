@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Bootstrap script for dotfiles environments.
-# Installs Homebrew, chezmoi, applies dotfiles, and runs brew bundle.
+# Installs Homebrew and chezmoi, then applies dotfiles.
 # Safe to re-run — each step is idempotent.
 set -euo pipefail
 
@@ -58,8 +58,8 @@ ZSHENV
 fi
 
 # --- Apply dotfiles ---
-# chezmoi init prompts for brew group selection, applies all dotfiles,
-# then runs brew bundle --global + cleanup via run_onchange_after_brew-install.sh
+# chezmoi init prompts for email/AWS/Sentry settings, applies all dotfiles,
+# then runs the .chezmoiscripts hooks
 echo "==> Applying dotfiles..."
 # POSIX way to get script's dir: https://stackoverflow.com/a/29834779/12156188
 script_dir="$(cd -P -- "$(dirname -- "$(command -v -- "$0")")" && pwd -P)"

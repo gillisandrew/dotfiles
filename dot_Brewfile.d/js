@@ -1,5 +1,0 @@
-tap "oven-sh/bun"
-brew "node"
-brew "pnpm"
-brew "typescript"
-brew "oven-sh/bun/bun"

@@ -4,8 +4,7 @@
 
 - **Source directory:** this repo. **Target:** `~` (home). Never edit target files directly.
 - **Shared templates:** `.chezmoitemplates/rc-common` (aliases, tool inits) and `profile-common` (PATH/toolchains). Both shells source these via `{{ template "rc-common" "zsh" }}`. Add aliases and shell functions here, not in individual shell rc files.
-- **Brew roles:** `dot_Brewfile.d/` has per-role Brewfiles. `chezmoi apply` triggers `brew-bundle` via onchange script. See README for role descriptions.
-- **Config template:** `.chezmoi.toml.tmpl` prompts for email, AWS SSO, and brew group selection during `chezmoi init`.
+- **Config template:** `.chezmoi.toml.tmpl` prompts for email, AWS SSO, and Sentry DSN during `chezmoi init`.
 
 ## Conventions
 
@@ -22,4 +21,4 @@
 ## References
 
 - Chezmoi skill (prefixes, templates, scripts): `skills/managing-dotfiles-with-chezmoi/SKILL.md`
-- README: install, brew roles, AWS workflow, naming conventions, glossary
+- README: install, AWS workflow, naming conventions, glossary

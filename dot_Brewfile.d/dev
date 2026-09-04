@@ -1,4 +1,0 @@
-brew "git-filter-repo"
-brew "gitleaks"
-brew "pre-commit"
-brew "tmux"

@@ -5,7 +5,7 @@ Idempotent — safe to run repeatedly. Renders templates, syncs files, and runs 
 ```mermaid
 flowchart TD
     subgraph data ["Template Data Sources"]
-        TD1["chezmoi.toml<br/>.email, .aws.*, .brew.*, .codespaces"]
+        TD1["chezmoi.toml<br/>.email, .aws.*, .sentry.*, .codespaces"]
         TD2[".chezmoidata/vscode.yaml<br/>.vscode.extensions, .vscode.profiles"]
         TD3["Built-in variables<br/>.chezmoi.os, .chezmoi.arch,<br/>.chezmoi.homeDir, .chezmoi.sourceDir"]
     end
@@ -22,7 +22,7 @@ flowchart TD
 
     subgraph phase2 ["Phase 2: File Updates"]
         H["Static files<br/>(dot_zshenv, dot_bash_profile,<br/>dot_gitignore, dot_gitattributes)"]
-        I["Template files<br/>(dot_gitconfig.tmpl,<br/>dot_Brewfile.tmpl, shell configs)"]
+        I["Template files<br/>(dot_gitconfig.tmpl,<br/>sentry-monitor.json.tmpl, shell configs)"]
         J["Shared templates<br/>(profile-common, rc-common)"]
         K["Modify scripts<br/>(dot_aws/modify_private_config.tmpl)"]
         L["Permission enforcement<br/>private_ → 0600/0700<br/>executable_ → 0755<br/>empty_ → ensure exists"]
@@ -30,7 +30,7 @@ flowchart TD
 
     subgraph phase3 ["Phase 3: Run Scripts"]
         M["run_once_after_<br/>setup-aws-sso.sh.tmpl"]
-        N["run_onchange_after_<br/>brew-install.sh.tmpl"]
+        N["run_onchange_after_<br/>install-precommit-hooks.sh.tmpl"]
         O["run_onchange_after_<br/>link-claude-skills.sh.tmpl"]
     end
 

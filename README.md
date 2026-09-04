@@ -23,42 +23,15 @@ On first run, chezmoi will prompt for:
 
 To change answers later, edit `~/.config/chezmoi/chezmoi.toml` and run `chezmoi apply`.
 
-**Full bootstrap** (Homebrew + chezmoi + packages):
+**Full bootstrap** (Homebrew + chezmoi):
 
 ```bash
 bash -c "$(curl -fsSL https://raw.githubusercontent.com/gillisandrew/dotfiles/main/install.sh)"
 ```
 
-`install.sh` installs Homebrew, chezmoi, applies dotfiles, and runs `brew bundle` on each role.
+`install.sh` installs Homebrew and chezmoi, then applies dotfiles. Packages are installed manually with `brew install`.
 
-**GitHub Codespaces:** Automatic — GitHub clones repos named `dotfiles` and runs `install.sh`. Only core packages are installed; AWS is disabled; email is read from `GIT_AUTHOR_EMAIL`.
-
-## Brew roles
-
-Packages are split into per-role Brewfiles in `~/.Brewfile.d/`. Each file is a plain standalone Brewfile — no config file, no state.
-
-| Role | Description |
-|------|-------------|
-| `core` | Dotfiles essentials (chezmoi, git, gum, starship) |
-| `cli` | Shell enhancements (atuin, bat, curlie, fzf, gh, htop, ripgrep, yq, zoxide) |
-| `dev` | Shared dev tools (pre-commit, gitleaks, tmux, graphite, etc.) |
-| `go` | Go toolchain and gopls |
-| `js` | Node, pnpm, TypeScript |
-| `python` | uv, ruff |
-| `rust` | rustup toolchain manager |
-| `ops` | Cloud and infrastructure tools (awscli, pandoc, ncdu, etc.) |
-| `macos_cli` | macOS-specific CLI tools (trash, yubico-piv-tool, etc.) |
-| `macos_apps` | macOS desktop applications (casks) |
-
-In devcontainers, only `core` is installed.
-
-**Installing packages:**
-
-Brew groups are selected during `chezmoi init` via an interactive multi-select prompt. To change your selection or sync packages, run:
-
-```bash
-chezmoi apply
-```
+**GitHub Codespaces:** Automatic — GitHub clones repos named `dotfiles` and runs `install.sh`. AWS is disabled; email is read from `GIT_AUTHOR_EMAIL`.
 
 ## Shell setup
 

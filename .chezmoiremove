@@ -1,0 +1,4 @@
+.Brewfile
+.Brewfile.d
+.local/bin/brew-bundle
+.local/bin/dotfiles-motd

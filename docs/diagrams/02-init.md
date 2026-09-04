@@ -11,15 +11,13 @@ flowchart TD
         B --> C{"CODESPACES<br/>env var?"}
 
         C -- Yes --> D["Skip all prompts<br/>email from GIT_AUTHOR_EMAIL<br/>aws.enabled = false"]
-        C -- No --> E["Glob dot_Brewfile.d/*<br/>to discover brew groups"]
-
-        E --> F["Read existing chezmoi.toml<br/>for migration defaults"]
+        C -- No --> F["Read existing chezmoi.toml<br/>for migration defaults"]
         F --> G["promptStringOnce: email"]
         G --> H["promptBoolOnce: aws.enabled"]
 
         H --> I{"aws.enabled?"}
         I -- Yes --> J["promptStringOnce:<br/>sso_session, sso_start_url,<br/>sso_region, sso_role_name"]
-        I -- No --> K["promptMultichoiceOnce:<br/>brew groups"]
+        I -- No --> K["promptStringOnce:<br/>sentry.dsn"]
         J --> K
 
         D --> L

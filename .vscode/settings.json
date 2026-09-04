@@ -3,7 +3,6 @@
   "go-template.patterns": ["**/*.tmpl"],
   "files.associations": {
     "*.tmpl": "go-template",
-    "**/dot_Brewfile.d/*": "ruby",
     "**/.chezmoiscripts/*": "shellscript"
   }
 }
