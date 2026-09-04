@@ -59,3 +59,5 @@
 [difftool "vscode"]
 	cmd = "code --wait --diff  "
 {{- end }}
+[gpg "ssh"]
+	allowedSignersFile = {{ .chezmoi.homeDir }}/.ssh/allowed_signers

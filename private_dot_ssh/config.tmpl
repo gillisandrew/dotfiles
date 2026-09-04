@@ -1,3 +1,8 @@
+{{ if eq .chezmoi.os "darwin" -}}
+# Colima adds this line itself on first start; keep it managed so apply is idempotent
+Include {{ .chezmoi.homeDir }}/.colima/ssh_config
+
+{{ end -}}
 # =========================================
 # GitHub — PTR record doesn't match hostname
 # =========================================
@@ -14,11 +19,16 @@ Host *
 
     # Only try explicitly listed keys
     IdentitiesOnly yes
+{{- if eq .chezmoi.os "darwin" }}
 
-{{ if eq .chezmoi.os "darwin" -}}
+    # Bitwarden Desktop SSH agent — explicit socket so we don't depend on
+    # SSH_AUTH_SOCK env-var inheritance (which breaks for git's child shells)
+    IdentityAgent ~/.bitwarden-ssh-agent.sock
+
     # Default identity (override per-host if needed)
     IdentityFile ~/.ssh/BW-2026-02-10-AUTH.pub
-{{ end -}}
+{{- end }}
+
     # Prefer modern key types
     PubkeyAuthentication yes
 
