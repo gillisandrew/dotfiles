@@ -6,6 +6,7 @@
 {{- $awsSsoStartUrl := "" -}}
 {{- $awsSsoRegion := "" -}}
 {{- $awsSsoRoleName := "" -}}
+{{- $sentryDsn := "" -}}
 
 {{- /* Discover brew groups from source directory, excluding core and overlay files (*.vscode etc.) */ -}}
 {{- $brewGroups := list -}}
@@ -35,6 +36,7 @@
 {{-     $awsSsoRegion = promptStringOnce . "aws.sso_region" "AWS SSO region" "us-east-1" -}}
 {{-     $awsSsoRoleName = promptStringOnce . "aws.sso_role_name" "AWS SSO role name" "AdministratorAccess" -}}
 {{-   end -}}
+{{-   $sentryDsn = promptStringOnce . "sentry.dsn" "Sentry DSN (claude-code-sentry-monitor; blank to disable)" -}}
 {{- end -}}
 
 {{- $selected := $defaultSelected -}}
@@ -55,3 +57,6 @@
 
 [data.brew]
   groups = {{ $selected | toToml }}
+
+[data.sentry]
+  dsn = {{ $sentryDsn | quote }}
