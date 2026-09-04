@@ -1,0 +1,10 @@
+#!/bin/bash
+# config-hash: {{ include ".pre-commit-config.yaml" | sha256sum }}
+set -euo pipefail
+
+# Install the pre-commit hook into the chezmoi source repo so secrets scanning
+# runs on every commit. No-op when pre-commit is absent (brew install pre-commit).
+command -v pre-commit >/dev/null 2>&1 || exit 0
+
+cd {{ .chezmoi.sourceDir | quote }}
+pre-commit install

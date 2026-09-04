@@ -1,0 +1,10 @@
+# gitleaks config for this repo. Extends the built-in ruleset; the pre-commit
+# gitleaks hook auto-discovers this file at the repo root.
+[extend]
+useDefault = true
+
+[[rules]]
+id = "sentry-dsn"
+description = "Sentry DSN (client key — exposing it lets others spam project quota)"
+regex = '''https://[a-f0-9]{32}@[a-z0-9.-]+sentry\.io/[0-9]+'''
+keywords = ["sentry.io"]
