@@ -70,5 +70,9 @@ fi
 
 unset _shell_cache_dir
 unset -f _cached_init
-
+{{ if eq . "zsh" }}
+# Vite+ completions: the env file only registers compdef if compinit has already
+# run, which is not the case when .zprofile sources it. Re-source here (PATH dedupes).
+[ -f "$HOME/.vite-plus/env" ] && . "$HOME/.vite-plus/env"
+{{ end }}
 . "$HOME/.local/bin/dotfiles-motd-fast"
