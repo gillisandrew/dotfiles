@@ -21,3 +21,6 @@ key.txt
 
 # Claude Code local state
 .claude/
+
+# Claude Code auto-synced skills (populated via the ~/.claude/skills symlink)
+skills/synced/
