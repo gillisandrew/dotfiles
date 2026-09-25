@@ -15,11 +15,16 @@ if [[ ! -o login ]] && [[ -z "$__PROFILE_SOURCED" ]]; then
 fi
 
 autoload -Uz compinit
-if [[ -f ~/.zcompdump && $(date +'%j') == $(stat -f '%Sm' -t '%j' ~/.zcompdump 2>/dev/null) ]]; then
-  compinit -C  # use cached dump (skips security check + regeneration)
-else
-  compinit     # full rebuild
-fi
+# Reuse the dump if it is under 24h old. Uses a zsh glob qualifier instead of
+# stat(1), whose flags differ between macOS and Linux. No subprocesses.
+() {
+  setopt localoptions extendedglob
+  if [[ -n ~/.zcompdump(#qN.mh-24) ]]; then
+    compinit -C  # cached dump: skip security check + regeneration
+  else
+    compinit     # full rebuild
+  fi
+}
 
 # History
 HISTSIZE=10000
