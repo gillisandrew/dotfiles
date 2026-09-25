@@ -12,6 +12,8 @@ esac
 
 if [ -n "${REMOTE_CONTAINERS:-}" ] || [ -n "${CODESPACES:-}" ] || [ -f /.dockerenv ]; then
   DOTFILES_ENV="devcontainer"
+elif [ "$DOTFILES_OS" = "linux" ] && { [ -d /usr/share/wayland-sessions ] || [ -d /usr/share/xsessions ]; }; then
+  DOTFILES_ENV="local-linux"
 elif [ "$DOTFILES_OS" = "linux" ]; then
   DOTFILES_ENV="remote-linux"
 else

@@ -35,7 +35,7 @@ bash -c "$(curl -fsSL https://raw.githubusercontent.com/gillisandrew/dotfiles/ma
 
 ## Shell setup
 
-Both **zsh** and **bash** get full configuration. Login env (PATH, toolchains, Homebrew) lives in `.zprofile` / `.profile`. Interactive config (prompt, aliases, functions, tool inits) lives in `.zshrc` / `.bashrc`. A shared `dotfiles-env` script detects the environment (`macos`, `devcontainer`, or `remote-linux`).
+Both **zsh** and **bash** get full configuration. Login env (PATH, toolchains, Homebrew) lives in `.zprofile` / `.profile`. Interactive config (prompt, aliases, functions, tool inits) lives in `.zshrc` / `.bashrc`. A shared `dotfiles-env` script detects the environment (`macos`, `devcontainer`, `local-linux` for a Linux desktop, or `remote-linux` for a headless server).
 
 Bash uses the standard `.bash_profile` → `.profile` + `.bashrc` sourcing chain, so bash-based environments (Codespaces) get the same setup as zsh.
 
