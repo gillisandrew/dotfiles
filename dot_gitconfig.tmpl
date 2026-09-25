@@ -10,10 +10,20 @@
 	excludesfile = {{ .chezmoi.homeDir }}/.gitignore
 	{{- if eq .chezmoi.os "darwin" }}
 	editor = "code --wait"
+	{{- else if lookPath "zed" }}
+	editor = "zed --wait"
 	{{- else }}
 	editor = vim
 	{{- end }}
 	attributesFile = {{ .chezmoi.homeDir }}/.gitattributes
+{{- if lookPath "delta" }}
+	pager = delta
+[interactive]
+	diffFilter = delta --color-only
+[delta]
+	navigate = true
+	line-numbers = true
+{{- end }}
 {{- if eq .chezmoi.os "darwin" }}
 [gpg]
 	format = ssh
@@ -30,6 +40,8 @@
 [fetch]
 	prune = true
 	prunetags = true
+[rerere]
+	enabled = true
 [rebase]
 	autoStash = true
 	autoSquash = true  # Honor fixup!/squash! commits
