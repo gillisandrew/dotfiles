@@ -1,10 +1,10 @@
 . "$HOME/.local/bin/dotfiles-env"
 
-# Homebrew shellenv
+# Homebrew shellenv (skipped on hosts without Homebrew)
 if [ "$DOTFILES_OS" = "macos" ]; then
-  eval "$(/opt/homebrew/bin/brew shellenv)"
+  [ -x /opt/homebrew/bin/brew ] && eval "$(/opt/homebrew/bin/brew shellenv)"
 elif [ "$DOTFILES_OS" = "linux" ]; then
-  eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
+  [ -x /home/linuxbrew/.linuxbrew/bin/brew ] && eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
 fi
 
 # Language/toolchain env
