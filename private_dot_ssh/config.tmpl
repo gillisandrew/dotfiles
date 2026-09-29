@@ -11,6 +11,19 @@ Host github.com
     VerifyHostKeyDNS no
 
 # =========================================
+# toasteroven — homelab, reachable anywhere over Tailscale
+# =========================================
+Host toasteroven
+    HostName toasteroven.tail577fa2.ts.net
+
+Host toasteroven toasteroven.tail577fa2.ts.net 100.104.43.50 192.168.0.44
+    User admin
+    # Same host key under every name; reuse the entry trusted for the LAN IP
+    HostKeyAlias 192.168.0.44
+    # No SSHFP records for these names
+    VerifyHostKeyDNS no
+
+# =========================================
 # Global defaults — apply to all hosts
 # =========================================
 Host *
