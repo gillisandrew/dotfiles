@@ -1,0 +1,36 @@
+#!/bin/sh
+# Merge the tracked base (.chezmoitemplates/claude-settings.json) into the live
+# ~/.claude/settings.json without clobbering keys Claude Code writes itself.
+#   - top-level scalars/lists: base wins
+#   - top-level objects: merged one level deep, base wins per key
+#   - permissions.allow / permissions.deny: union of live and base
+# Keys absent from the base (autoMode, survey state, ...) are left untouched,
+# and jq preserves the live key order so diffs stay minimal.
+set -eu
+
+live=$(cat)
+
+if ! command -v jq >/dev/null 2>&1; then
+    echo "modify settings.json: jq not found, leaving file unchanged" >&2
+    printf '%s' "$live"
+    exit 0
+fi
+
+[ -n "$live" ] || live='{}'
+
+base=$(cat <<'EOF'
+{{ includeTemplate "claude-settings.json" . }}
+EOF
+)
+
+printf '%s' "$live" | jq --argjson base "$base" '
+  reduce ($base | to_entries[]) as {key: $k, value: $v} (.;
+    if (.[$k] | type) == "object" and ($v | type) == "object" then
+      .[$k] |= reduce ($v | to_entries[]) as {key: $sk, value: $sv} (.;
+        if $k == "permissions" and ($sk == "allow" or $sk == "deny") and (.[$sk] | type) == "array"
+        then .[$sk] += ($sv - .[$sk])
+        else .[$sk] = $sv
+        end)
+    else .[$k] = $v
+    end)
+'

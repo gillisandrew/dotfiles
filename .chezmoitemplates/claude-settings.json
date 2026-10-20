@@ -1,0 +1,53 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "model": "opus",
+  "env": {
+    "DISABLE_ZOXIDE": "1"
+  },
+  "includeCoAuthoredBy": false,
+  "statusLine": {
+    "type": "command",
+    "command": "~/.local/bin/starship-claude"
+  },
+  "permissions": {
+    "defaultMode": "auto",
+    "blockReadsOutsideWorkingDirectories": false,
+    "allow": [
+      "Bash(gh api:*)",
+      "Bash(git add *)",
+      "Bash(git commit *)",
+      "Bash(vp check *)",
+      "Bash(vp build *)",
+      "Bash(vp test *)",
+      "Bash(vp lint *)",
+      "Bash(node_modules/.bin/playwright test *)"
+    ]
+  },
+  "extraKnownMarketplaces": {
+    "obsidian-skills": { "source": { "source": "github", "repo": "kepano/obsidian-skills" } },
+    "cooklang-skills": { "source": { "source": "github", "repo": "cooklang/cooklang-skills" } },
+    "cloudflare": { "source": { "source": "github", "repo": "cloudflare/skills" } },
+    "ancci": { "source": { "source": "github", "repo": "gillisandrew/ancci" }, "autoUpdate": true },
+    "typesafe-ai": { "source": { "source": "github", "repo": "typesafe-ai/skills" } },
+    "emdash": { "source": { "source": "github", "repo": "emdash-cms/skills" } },
+    "impeccable": { "source": { "source": "git", "url": "https://github.com/pbakaus/impeccable.git" } },
+    "claude-code-mods": { "source": { "source": "github", "repo": "ray-amjad/claude-code-mods" } }
+  },
+  "enabledPlugins": {
+    "context7@claude-plugins-official": true,
+    "mattpocock-skills@claude-plugins-official": true,
+    "typesafe@typesafe-ai": true,
+    "impeccable@impeccable": true,
+    "decision-tree@claude-code-mods": true,
+    "diagram-pane@claude-code-mods": true
+  },
+  "autoUpdatesChannel": "latest",
+  "tui": "fullscreen",
+  "voice": { "enabled": true, "mode": "hold" },
+  "preferredNotifChannel": "ghostty",
+  "agentPushNotifEnabled": true,
+  "autoCompactEnabled": false,
+  "showTurnDuration": false,
+  "skipDangerousModePermissionPrompt": true,
+  "skipWorkflowUsageWarning": true
+}
