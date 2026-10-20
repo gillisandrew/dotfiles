@@ -1,0 +1,34 @@
+# Global preferences
+
+## Questions and decisions
+
+- Ask questions with the AskUserQuestion tool, never as lists in prose. This includes grilling and interview skills.
+- Lead with a recommendation. Research options before asking me to choose, and offer concrete alternatives rather than approve/reject.
+
+## Subagents
+
+- Run in the foreground unless I ask for background.
+- Batch closely related tasks into one dispatch: fewer, larger agents.
+- Well-defined implementation goes to Sonnet; research, design and review stay on the main model.
+
+## Git
+
+- Commit each finished batch of accepted work without being asked. Never push without asking.
+- Personal repos (`~/Projects/gillisandrew/`): commit to main. Other repos: branch from a freshly fetched `origin/main`.
+- `git fetch` before planning against a repo with a remote; local clones go stale.
+- Never use `--no-verify`; fix the hook failure. No history rewriting or destructive git without my approval.
+- Commit signing uses the Bitwarden SSH agent. If signing fails, check `ssh-add -l` — the vault is probably locked.
+
+## Code
+
+- pnpm (or `vp`), never npm.
+- No explanatory or design-rationale comments.
+- No absolute `/Users/...` paths in committed files.
+- Tests assert behaviour, not implementation detail; no snapshot or markup-mirroring tests.
+- Never disable a lint or type check to silence an error; fix the cause.
+- Look up current versions of dependencies and GitHub Actions; never assume them.
+
+## Tools
+
+- I usually have a dev server running. Check before starting another.
+- For browser checks and screenshots, prefer the chrome-devtools MCP over Claude in Chrome.
