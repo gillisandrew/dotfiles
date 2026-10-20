@@ -15,10 +15,10 @@
 
 ## Common Mistakes
 
-- Chezmoi prefix order matters — see `skills/managing-dotfiles-with-chezmoi/SKILL.md` for the full prefix table.
+- Chezmoi prefix order matters — see the `kit:managing-dotfiles-with-chezmoi` skill for the full prefix table.
 - OS-conditional ignores go in `.chezmoiignore` using template syntax.
 
 ## References
 
-- Chezmoi skill (prefixes, templates, scripts): `skills/managing-dotfiles-with-chezmoi/SKILL.md`
+- Chezmoi skill (prefixes, templates, scripts): `kit:managing-dotfiles-with-chezmoi`, from the `claude-kit` plugin (github.com/gillisandrew/claude-kit)
 - README: install, AWS workflow, naming conventions, glossary

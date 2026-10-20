@@ -31,7 +31,8 @@
     "typesafe-ai": { "source": { "source": "github", "repo": "typesafe-ai/skills" } },
     "emdash": { "source": { "source": "github", "repo": "emdash-cms/skills" } },
     "impeccable": { "source": { "source": "git", "url": "https://github.com/pbakaus/impeccable.git" } },
-    "claude-code-mods": { "source": { "source": "github", "repo": "ray-amjad/claude-code-mods" } }
+    "claude-code-mods": { "source": { "source": "github", "repo": "ray-amjad/claude-code-mods" } },
+    "claude-kit": { "source": { "source": "github", "repo": "gillisandrew/claude-kit" }, "autoUpdate": true }
   },
   "enabledPlugins": {
     "context7@claude-plugins-official": true,
@@ -39,7 +40,8 @@
     "typesafe@typesafe-ai": true,
     "impeccable@impeccable": true,
     "decision-tree@claude-code-mods": true,
-    "diagram-pane@claude-code-mods": true
+    "diagram-pane@claude-code-mods": true,
+    "kit@claude-kit": true
   },
   "autoUpdatesChannel": "latest",
   "tui": "fullscreen",

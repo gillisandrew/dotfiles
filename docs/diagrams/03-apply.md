@@ -31,7 +31,6 @@ flowchart TD
     subgraph phase3 ["Phase 3: Run Scripts"]
         M["run_once_after_<br/>setup-aws-sso.sh.tmpl"]
         N["run_onchange_after_<br/>install-precommit-hooks.sh.tmpl"]
-        O["run_onchange_after_<br/>link-claude-skills.sh.tmpl"]
     end
 
     data --> phase1
