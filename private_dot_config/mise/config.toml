@@ -1,0 +1,22 @@
+# Global tool versions. Per-project versions go in the project's mise.toml.
+# Upgrade "latest" tools with `mise upgrade`.
+
+[tools]
+# Runtimes
+node = "24"
+pnpm = "latest"
+bun = "latest"
+python = "3.13"
+uv = "latest"
+
+# CLI tools
+actionlint = "latest"
+fd = "latest"
+gitleaks = "latest"
+jq = "latest"
+opentofu = "latest"
+ripgrep = "latest"
+ruff = "latest"
+shellcheck = "latest"
+terraform = "latest"
+yq = "latest"

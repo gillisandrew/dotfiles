@@ -1,0 +1,10 @@
+#!/bin/bash
+# config-hash: {{ include "private_dot_config/mise/config.toml" | sha256sum }}
+set -euo pipefail
+
+# Install the global tool versions from ~/.config/mise/config.toml.
+# No-op when mise is absent (install.sh installs it).
+mise_bin="$(command -v mise || echo "$HOME/.local/bin/mise")"
+[ -x "$mise_bin" ] || exit 0
+
+"$mise_bin" install --yes
