@@ -1,5 +1,7 @@
 # Migration: chezmoi to nix-darwin + home-manager
 
+> **Status: superseded (2026-10-20).** Not implemented. Packages are now managed by mise (`private_dot_config/mise/config.toml`) and a `Brewfile`, with chezmoi kept. Do not execute this plan.
+
 ## Summary
 
 Replace chezmoi with nix-darwin (macOS system management) and home-manager (user config), using the [bgub/nix-macos-starter](https://github.com/bgub/nix-macos-starter) as a starting point. Language toolchains move to per-project flakes loaded via nix-direnv.

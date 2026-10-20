@@ -1,5 +1,7 @@
 # Nix-Darwin + Home-Manager Migration — Implementation Plan
 
+> **Status: superseded (2026-10-20).** Not implemented. Packages are now managed by mise (`private_dot_config/mise/config.toml`) and a `Brewfile`, with chezmoi kept. Do not execute this plan.
+
 > **For Claude:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task.
 
 **Goal:** Migrate dotfiles management from chezmoi to nix-darwin + home-manager, with a new repo at `~/.config/nix/`.
