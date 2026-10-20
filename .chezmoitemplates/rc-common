@@ -60,6 +60,7 @@ _cached_init() {
 # CLAUDE EXPERIMENTAL FLAGS
 export CLAUDE_CODE_FORK_SUBAGENT=1
 export CLAUDE_CODE_ENABLE_FUNCTION_HOOKS=1
+[ -z "$DISABLE_MISE" ] && [ "$(command -v mise)" ] && _cached_init mise.{{ . }} mise activate {{ . }}
 if [ -z "$CLAUDECODE" ]; then
   [ -z "$DISABLE_CARAPACE" ] && [ "$(command -v carapace)" ] && _cached_init carapace.{{ . }} carapace _carapace {{ . }}
 {{ if eq . "zsh" }}  [ -z "$DISABLE_FZF" ] && [ "$(command -v fzf)" ] && _cached_init fzf.zsh fzf --zsh

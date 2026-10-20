@@ -50,6 +50,12 @@ fi
 # Common user bins
 [ -d "$HOME/.local/bin" ] && export PATH="$HOME/.local/bin:$PATH"
 
+# mise shims for non-interactive shells and editors; `mise activate` in rc-common
+# replaces them with real tool paths in interactive shells.
+_mise_shims="${MISE_DATA_DIR:-$HOME/.local/share/mise}/shims"
+[ -d "$_mise_shims" ] && export PATH="$_mise_shims:$PATH"
+unset _mise_shims
+
 # Preferred editor for local and remote sessions
 if [ -n "$SSH_CONNECTION" ]; then
 	export EDITOR='vim'

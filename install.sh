@@ -47,6 +47,14 @@ else
   echo "==> chezmoi already installed"
 fi
 
+# --- Install mise (to ~/.local/bin) ---
+if ! command -v mise >/dev/null 2>&1 && [ ! -x "$HOME/.local/bin/mise" ]; then
+  echo "==> Installing mise..."
+  curl -fsSL https://mise.run | sh
+else
+  echo "==> mise already installed"
+fi
+
 # --- Devcontainer: fix ZDOTDIR so zsh loads $HOME/.zshrc ---
 if [ "$DOTFILES_ENV" = "devcontainer" ] && [ -f /etc/zsh/zshenv ]; then
   if ! grep -q 'ZDOTDIR="\$HOME"' /etc/zsh/zshenv 2>/dev/null; then
