@@ -24,3 +24,8 @@ key.txt
 
 # Claude Code auto-synced skills (populated via the ~/.claude/skills symlink)
 skills/synced/
+
+# Impeccable skill large assets (exceed pre-commit size limit; kept local only)
+skills/impeccable/scripts/bin/
+skills/impeccable/scripts/data/font-index.json
+skills/impeccable/scripts/live-browser.js
