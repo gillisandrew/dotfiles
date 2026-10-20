@@ -23,13 +23,13 @@ On first run, chezmoi will prompt for:
 
 To change answers later, edit `~/.config/chezmoi/chezmoi.toml` and run `chezmoi apply`.
 
-**Full bootstrap** (Homebrew + chezmoi):
+**Full bootstrap** (Homebrew + mise + chezmoi):
 
 ```bash
 bash -c "$(curl -fsSL https://raw.githubusercontent.com/gillisandrew/dotfiles/main/install.sh)"
 ```
 
-`install.sh` installs Homebrew and chezmoi, then applies dotfiles. Packages are installed manually with `brew install`.
+`install.sh` installs Homebrew, mise and chezmoi, then applies dotfiles. Apply runs `mise install` when `private_dot_config/mise/config.toml` changes (runtimes and versioned dev tools) and, on macOS, `brew bundle install` when `Brewfile` changes (apps and system tools). Add a package by editing the matching file, then run `chezmoi apply`.
 
 **GitHub Codespaces:** Automatic — GitHub clones repos named `dotfiles` and runs `install.sh`. AWS is disabled; email is read from `GIT_AUTHOR_EMAIL`.
 
