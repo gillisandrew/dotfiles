@@ -1,0 +1,11 @@
+{{ if eq .chezmoi.os "darwin" -}}
+#!/bin/bash
+# brewfile-hash: {{ include "Brewfile" | sha256sum }}
+set -euo pipefail
+
+# Install packages listed in the Brewfile. Never removes unlisted packages;
+# run `brew bundle cleanup --file=<Brewfile>` by hand to see strays.
+[ -x /opt/homebrew/bin/brew ] || exit 0
+
+/opt/homebrew/bin/brew bundle install --no-upgrade --file={{ joinPath .chezmoi.sourceDir "Brewfile" | quote }}
+{{ end -}}
