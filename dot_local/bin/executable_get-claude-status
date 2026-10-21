@@ -1,0 +1,65 @@
+#!/usr/bin/env bash
+# Claude Code status line: dir, git branch and status, model, context %, cost.
+# Reads the session JSON on stdin; see `statusLine` in ~/.claude/settings.json.
+
+set -euo pipefail
+
+IFS=$'\t' read -r dir model context cost < <(jq -r '[
+  (.workspace.current_dir // .cwd // ""),
+  (.model.display_name // ""),
+  (.context_window.used_percentage // "" | tostring),
+  (.cost.total_cost_usd // "" | tostring)
+] | @tsv')
+
+reset=$'\e[0m' dim=$'\e[2m'
+cyan=$'\e[36m' magenta=$'\e[35m' blue=$'\e[34m' green=$'\e[32m' yellow=$'\e[33m' red=$'\e[31m'
+
+parts=()
+
+# Directory: repo name plus path inside it, else the last two components.
+if root="$(git -C "$dir" rev-parse --show-toplevel 2>/dev/null)"; then
+  label="$(basename "$root")${dir#"$root"}"
+else
+  label="${dir/#$HOME/~}"
+  [[ "$label" == */*/* ]] && label="${label#"${label%/*/*}"/}"
+fi
+parts+=("${cyan}${label}${reset}")
+
+# Git: branch, ahead/behind, then staged (+), modified (!), untracked (?).
+if [[ -n "${root:-}" ]]; then
+  branch="" ahead=0 behind=0 staged=0 modified=0 untracked=0
+  while IFS= read -r line; do
+    case "$line" in
+      "# branch.head "*) branch="${line#\# branch.head }" ;;
+      "# branch.ab "*) read -r _ _ a b <<<"$line"; ahead="${a#+}"; behind="${b#-}" ;;
+      "1 "*|"2 "*)
+        xy="${line:2:2}"
+        [[ "${xy:0:1}" != "." ]] && staged=1
+        [[ "${xy:1:1}" != "." ]] && modified=1 ;;
+      "? "*) untracked=1 ;;
+    esac
+  done < <(git -C "$dir" --no-optional-locks status --porcelain=v2 --branch 2>/dev/null)
+  flags=""
+  (( ahead > 0 )) && flags+="⇡${ahead}"
+  (( behind > 0 )) && flags+="⇣${behind}"
+  (( staged )) && flags+="+"
+  (( modified )) && flags+="!"
+  (( untracked )) && flags+="?"
+  parts+=("${magenta}${branch}${reset}${flags:+ ${red}${flags}${reset}}")
+fi
+
+[[ -n "$model" ]] && parts+=("${blue}${model}${reset}")
+
+if [[ -n "$context" ]]; then
+  color="$green"
+  (( context >= 50 )) && color="$yellow"
+  (( context >= 80 )) && color="$red"
+  parts+=("${color}${context}%${reset}")
+fi
+
+[[ -n "$cost" ]] && parts+=("${dim}\$$(printf '%.2f' "$cost")${reset}")
+
+sep=" ${dim}·${reset} "
+out="${parts[0]}"
+for part in "${parts[@]:1}"; do out+="${sep}${part}"; done
+printf '%s\n' "$out"

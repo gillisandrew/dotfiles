@@ -23,7 +23,7 @@ flowchart LR
         T4[".ssh/config,<br/>.ssh/BW-*.pub"]
         T5[".aws/config"]
         T6[".config/atuin/config.toml<br/>.config/espanso/**<br/>.config/gh/config.yml<br/>.config/ghostty/config"]
-        T7[".local/bin/dotfiles-env<br/>.local/bin/dotfiles-motd-fast<br/>.local/bin/refresh-zorg-profiles<br/>...5 more scripts"]
+        T7[".local/bin/dotfiles-env<br/>.local/bin/dotfiles-motd-fast<br/>.local/bin/refresh-zorg-profiles<br/>...6 more scripts"]
         T8["(no files — side effects only)<br/>brew bundle, mise install,<br/>pre-commit install, Claude MCP servers"]
         T9[".claude/settings.json (merged)<br/>.claude/CLAUDE.md"]
     end

@@ -5,6 +5,10 @@
     "DISABLE_ZOXIDE": "1"
   },
   "includeCoAuthoredBy": false,
+  "statusLine": {
+    "type": "command",
+    "command": "~/.local/bin/get-claude-status"
+  },
   "permissions": {
     "defaultMode": "auto",
     "blockReadsOutsideWorkingDirectories": false,
