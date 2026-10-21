@@ -1,0 +1,83 @@
+#!/usr/bin/env bash
+# Prune Claude Code state for projects whose directories no longer exist:
+#   - ~/.claude.json project entries (needs every Claude Code session closed)
+#   - ~/.claude/projects/<dir> transcripts and memory (moved to ~/.claude/backups)
+# Dry run by default; pass --force to apply.
+
+set -euo pipefail
+
+FORCE=false
+if [[ "${1:-}" == "--force" ]]; then
+  FORCE=true
+fi
+
+SESSIONS_OPEN=false
+if pgrep -f '(^|/)claude( |$)' >/dev/null 2>&1; then
+  SESSIONS_OPEN=true
+fi
+
+FORCE="$FORCE" SESSIONS_OPEN="$SESSIONS_OPEN" python3 -I - <<'EOF'
+import glob, json, os, shutil, time
+
+force = os.environ["FORCE"] == "true"
+sessions_open = os.environ["SESSIONS_OPEN"] == "true"
+home = os.path.expanduser("~")
+config_path = os.path.join(home, ".claude.json")
+projects_root = os.path.join(home, ".claude", "projects")
+backup_root = os.path.join(home, ".claude", "backups", "projects-" + time.strftime("%Y%m%d-%H%M%S"))
+
+def recorded_cwd(project_dir):
+    for transcript in glob.glob(os.path.join(project_dir, "*.jsonl")):
+        with open(transcript, errors="replace") as fh:
+            for line in fh:
+                if '"cwd"' not in line:
+                    continue
+                try:
+                    cwd = json.loads(line).get("cwd")
+                except ValueError:
+                    continue
+                if cwd:
+                    return cwd
+    return None
+
+stale_dirs = []
+for name in sorted(os.listdir(projects_root)):
+    path = os.path.join(projects_root, name)
+    if not os.path.isdir(path) or name.startswith("ssh-"):
+        continue
+    cwd = recorded_cwd(path)
+    if cwd and not os.path.isdir(cwd):
+        stale_dirs.append((name, cwd))
+
+with open(config_path) as fh:
+    config = json.load(fh)
+stale_entries = [p for p in config.get("projects", {}) if not os.path.isdir(p)]
+
+print(f"Transcript folders for deleted projects: {len(stale_dirs)}")
+for name, cwd in stale_dirs:
+    print(f"  {cwd.replace(home, '~')}")
+print(f"~/.claude.json entries for deleted projects: {len(stale_entries)}")
+
+if not force:
+    print("Dry run. Re-run with --force to apply.")
+    raise SystemExit(0)
+
+if stale_dirs:
+    os.makedirs(backup_root)
+    for name, _ in stale_dirs:
+        shutil.move(os.path.join(projects_root, name), os.path.join(backup_root, name))
+    print(f"Moved {len(stale_dirs)} folders to {backup_root.replace(home, '~')}")
+
+if stale_entries:
+    if sessions_open:
+        print("Skipped ~/.claude.json: Claude Code sessions are open and would overwrite it. Quit them and re-run.")
+    else:
+        shutil.copy2(config_path, config_path + ".bak-" + time.strftime("%Y%m%d-%H%M%S"))
+        for p in stale_entries:
+            del config["projects"][p]
+        tmp = config_path + ".tmp"
+        with open(tmp, "w") as fh:
+            json.dump(config, fh, indent=2)
+        os.replace(tmp, config_path)
+        print(f"Removed {len(stale_entries)} entries from ~/.claude.json (backup saved beside it)")
+EOF
