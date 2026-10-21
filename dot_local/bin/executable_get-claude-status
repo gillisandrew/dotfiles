@@ -1,18 +1,41 @@
 #!/usr/bin/env bash
-# Claude Code status line: dir, git branch and status, model, context %, cost.
+# Claude Code status line: dir, git, model and effort, context %, prompt cache
+# time left, 5-hour usage, lines changed, cost.
 # Reads the session JSON on stdin; see `statusLine` in ~/.claude/settings.json.
+# Claude Code redraws it on session activity, so the cache countdown can lag while idle.
 
 set -euo pipefail
 
-IFS=$'\t' read -r dir model context cost < <(jq -r '[
+# Unit separator, not tab: bash collapses consecutive tabs and would shift empty fields.
+IFS=$'\x1f' read -r dir model effort fast context cache_warm cache_expires usage_5h reset_5h added removed cost < <(jq -r '[
   (.workspace.current_dir // .cwd // ""),
   (.model.display_name // ""),
-  (.context_window.used_percentage // "" | tostring),
-  (.cost.total_cost_usd // "" | tostring)
-] | @tsv')
+  (.effort.level // ""),
+  (.fast_mode // false),
+  (.context_window.used_percentage // ""),
+  (.prompt_cache.warm | if . == null then "" else . end),
+  (.prompt_cache.expires_at // ""),
+  (.rate_limits.five_hour.used_percentage // ""),
+  (.rate_limits.five_hour.resets_at // ""),
+  (.cost.total_lines_added // 0),
+  (.cost.total_lines_removed // 0),
+  (.cost.total_cost_usd // "")
+] | map(tostring) | join("\u001f")')
 
 reset=$'\e[0m' dim=$'\e[2m'
 cyan=$'\e[36m' magenta=$'\e[35m' blue=$'\e[34m' green=$'\e[32m' yellow=$'\e[33m' red=$'\e[31m'
+
+# Green below 50, yellow from 50, red from 80.
+level_color() {
+  if (( $1 >= 80 )); then printf '%s' "$red"
+  elif (( $1 >= 50 )); then printf '%s' "$yellow"
+  else printf '%s' "$green"
+  fi
+}
+
+clock() {
+  date -d "@$1" +%H:%M 2>/dev/null || /bin/date -r "$1" +%H:%M
+}
 
 parts=()
 
@@ -48,14 +71,37 @@ if [[ -n "${root:-}" ]]; then
   parts+=("${magenta}${branch}${reset}${flags:+ ${red}${flags}${reset}}")
 fi
 
-[[ -n "$model" ]] && parts+=("${blue}${model}${reset}")
-
-if [[ -n "$context" ]]; then
-  color="$green"
-  (( context >= 50 )) && color="$yellow"
-  (( context >= 80 )) && color="$red"
-  parts+=("${color}${context}%${reset}")
+# Model, effort, fast mode.
+if [[ -n "$model" ]]; then
+  segment="${blue}${model}${reset}"
+  [[ -n "$effort" ]] && segment+=" ${dim}${effort}${reset}"
+  [[ "$fast" == "true" ]] && segment+=" ${yellow}⚡${reset}"
+  parts+=("$segment")
 fi
+
+[[ -n "$context" ]] && parts+=("$(level_color "$context")${context}%${reset}")
+
+# Prompt cache: minutes until it expires; yellow under 10, red once cold.
+if [[ -n "$cache_warm" ]]; then
+  left=0
+  [[ "$cache_warm" == "true" && -n "$cache_expires" ]] && left=$(( (cache_expires - $(date +%s)) / 60 ))
+  if (( left <= 0 )); then
+    parts+=("${red}cache cold${reset}")
+  elif (( left < 10 )); then
+    parts+=("${yellow}cache ${left}m${reset}")
+  else
+    parts+=("${green}cache ${left}m${reset}")
+  fi
+fi
+
+# 5-hour usage; reset time once past half.
+if [[ -n "$usage_5h" ]]; then
+  segment="$(level_color "$usage_5h")5h ${usage_5h}%${reset}"
+  (( usage_5h >= 50 )) && [[ -n "$reset_5h" ]] && segment+=" ${dim}↻$(clock "$reset_5h")${reset}"
+  parts+=("$segment")
+fi
+
+(( added > 0 || removed > 0 )) && parts+=("${green}+${added}${reset} ${red}−${removed}${reset}")
 
 [[ -n "$cost" ]] && parts+=("${dim}\$$(printf '%.2f' "$cost")${reset}")
 
