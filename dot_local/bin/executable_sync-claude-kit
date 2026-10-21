@@ -1,0 +1,33 @@
+#!/usr/bin/env bash
+# Push local claude-kit commits, then refresh the installed kit plugin.
+
+set -euo pipefail
+
+repo="${CLAUDE_KIT_DIR:-$HOME/Projects/gillisandrew/claude-kit}"
+plugin="kit@claude-kit"
+
+if [[ -d "$repo/.git" ]]; then
+  if [[ -n "$(git -C "$repo" status --porcelain)" ]]; then
+    echo "claude-kit has uncommitted changes in $repo. Commit them first." >&2
+    exit 1
+  fi
+  if [[ -n "$(git -C "$repo" log --oneline '@{u}..' 2>/dev/null)" ]]; then
+    git -C "$repo" push --quiet
+    echo "Pushed claude-kit."
+  fi
+fi
+
+installed_version() {
+  jq -r --arg p "$plugin" '.plugins[$p][0].version // "none"' "$HOME/.claude/plugins/installed_plugins.json"
+}
+
+before="$(installed_version)"
+claude plugin marketplace update claude-kit >/dev/null
+claude plugin update "$plugin" >/dev/null
+after="$(installed_version)"
+
+if [[ "$before" == "$after" ]]; then
+  echo "$plugin still at $after. Bump version in .claude-plugin/*.json to ship changes."
+else
+  echo "$plugin updated: $before -> $after. Restart Claude Code to load it."
+fi
