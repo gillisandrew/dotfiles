@@ -67,6 +67,32 @@ ZSHENV
   fi
 fi
 
+# --- Restore age key (decrypts private config in .private/) ---
+# From $CHEZMOI_AGE_KEY (devcontainer/Codespaces secret), else Bitwarden when interactive.
+# Without it, chezmoi applies the public config only.
+age_key="$HOME/.config/chezmoi/key.txt"
+if [ -f "$age_key" ]; then
+  echo "==> age key already present"
+else
+  mkdir -p "$(dirname "$age_key")"
+  if [ -z "${CHEZMOI_AGE_KEY:-}" ] && [ -t 0 ] && [ "$DOTFILES_OS" = "macos" ] && ! command -v bw >/dev/null 2>&1; then
+    echo "==> Installing Bitwarden CLI..."
+    HOMEBREW_NO_ENV_HINTS=1 brew install bitwarden-cli
+  fi
+  if [ -n "${CHEZMOI_AGE_KEY:-}" ]; then
+    (umask 077; printf '%s\n' "$CHEZMOI_AGE_KEY" > "$age_key")
+    echo "==> Restored age key from CHEZMOI_AGE_KEY"
+  elif [ -t 0 ] && command -v bw >/dev/null 2>&1; then
+    echo "==> Restoring age key from Bitwarden..."
+    bw login --check >/dev/null 2>&1 || bw login
+    BW_SESSION="$(bw unlock --raw)"
+    (umask 077; bw get notes "chezmoi age key" --session "$BW_SESSION" > "$age_key")
+    bw lock >/dev/null
+  else
+    echo "==> No age key (set CHEZMOI_AGE_KEY or install bw); private config skipped"
+  fi
+fi
+
 # --- Apply dotfiles ---
 # chezmoi init prompts for email/AWS/Sentry settings, applies all dotfiles,
 # then runs the .chezmoiscripts hooks

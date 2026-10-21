@@ -33,6 +33,8 @@ bash -c "$(curl -fsSL https://raw.githubusercontent.com/gillisandrew/dotfiles/ma
 
 **GitHub Codespaces:** Automatic — GitHub clones repos named `dotfiles` and runs `install.sh`. AWS is disabled; email is read from `GIT_AUTHOR_EMAIL`.
 
+**Private config:** `.private/` holds age-encrypted files, decrypted with `~/.config/chezmoi/key.txt`. `install.sh` restores the key from `$CHEZMOI_AGE_KEY` (set it as a Codespaces or devcontainer secret) or, interactively, from the Bitwarden secure note `chezmoi age key`. Without the key, the public config applies. Edit a private file with `chezmoi decrypt .private/<file>.age`, then re-encrypt with `chezmoi encrypt`.
+
 ## Shell setup
 
 Both **zsh** and **bash** get full configuration. Login env (PATH, toolchains, Homebrew) lives in `.zprofile` / `.profile`. Interactive config (prompt, aliases, functions, tool inits) lives in `.zshrc` / `.bashrc`. A shared `dotfiles-env` script detects the environment (`macos`, `devcontainer`, `local-linux` for a Linux desktop, or `remote-linux` for a headless server).
