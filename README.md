@@ -59,9 +59,11 @@ To re-generate profiles (e.g. after accounts are added/removed), just run `refre
 |---------|-------------|
 | `clean-deps` | Remove build artifacts (`node_modules`, `dist`, `.venv`, etc.). Dry-run by default; `--force` to delete. |
 | `clean-package-cache` | Purge caches for npm, pip, uv, go, cargo, terraform, and more. Dry-run by default; `--force` to execute. |
+| `clean-claude-projects` | Prune Claude Code state for deleted projects. Dry-run by default; `--force` to apply. |
+| `clean-shell-cache` | Clear cached shell init scripts after upgrading starship, atuin, etc. |
 | `dotfiles-env` | Detect environment (`DOTFILES_OS`, `DOTFILES_ENV`). Sourced by shell configs. |
 | `refresh-zorg-profiles` | Log into AWS SSO, enumerate org accounts, and regenerate `~/.aws/config`. |
-| `starship-claude` | Starship status line integration for Claude Code sessions. |
+| `sync-claude-kit` | Push local claude-kit commits and refresh the installed `kit` plugin. |
 
 Scripts use [gum](https://github.com/charmbracelet/gum) for styled output, spinners, and prompts when available, with plain-text fallbacks.
 

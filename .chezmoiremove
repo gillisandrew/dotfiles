@@ -2,3 +2,7 @@
 .Brewfile.d
 .local/bin/brew-bundle
 .local/bin/dotfiles-motd
+.claude/starship.toml
+.local/bin/get-ses-prod-access-status
+.local/bin/shell-cache-clear
+.local/bin/starship-claude

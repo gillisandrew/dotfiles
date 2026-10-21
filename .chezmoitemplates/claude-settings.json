@@ -5,10 +5,6 @@
     "DISABLE_ZOXIDE": "1"
   },
   "includeCoAuthoredBy": false,
-  "statusLine": {
-    "type": "command",
-    "command": "~/.local/bin/starship-claude"
-  },
   "permissions": {
     "defaultMode": "auto",
     "blockReadsOutsideWorkingDirectories": false,
