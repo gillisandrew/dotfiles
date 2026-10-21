@@ -25,16 +25,34 @@ IFS=$'\x1f' read -r dir model effort fast context cache_warm cache_expires usage
 reset=$'\e[0m' dim=$'\e[2m'
 cyan=$'\e[36m' magenta=$'\e[35m' blue=$'\e[34m' green=$'\e[32m' yellow=$'\e[33m' red=$'\e[31m'
 
-# Nerd Font icons (Ghostty: FiraCode Nerd Font Mono).
-i_dir=''
-i_branch=''
-i_model='󰚩'
-i_fast=''
-i_context='󰍛'
-i_cache='󰔟'
-i_usage='󰓅'
-i_diff=''
-i_cost=''
+# Nerd Font icons in Ghostty (FiraCode Nerd Font Mono), text labels elsewhere.
+# CLAUDE_STATUS_ICONS=1 or 0 overrides the detection.
+use_icons="${CLAUDE_STATUS_ICONS:-}"
+if [[ -z "$use_icons" ]]; then
+  use_icons=0
+  [[ "${TERM_PROGRAM:-}" == ghostty || "${TERM:-}" == xterm-ghostty ]] && use_icons=1
+fi
+if [[ "$use_icons" == 1 ]]; then
+  i_dir=' '
+  i_branch=' '
+  i_model='󰚩 '
+  i_fast=''
+  i_context='󰍛 '
+  i_cache='󰔟 '
+  i_usage='󰓅 '
+  i_diff=' '
+  i_cost=' '
+else
+  i_dir=''
+  i_branch=''
+  i_model=''
+  i_fast='⚡'
+  i_context=''
+  i_cache='cache '
+  i_usage='5h '
+  i_diff=''
+  i_cost='$'
+fi
 
 # Green below 50, yellow from 50, red from 80.
 level_color() {
@@ -57,7 +75,7 @@ else
   label="${dir/#$HOME/~}"
   [[ "$label" == */*/* ]] && label="${label#"${label%/*/*}"/}"
 fi
-parts+=("${cyan}${i_dir} ${label}${reset}")
+parts+=("${cyan}${i_dir}${label}${reset}")
 
 # Git: branch, ahead/behind, then staged (+), modified (!), untracked (?).
 if [[ -n "${root:-}" ]]; then
@@ -79,42 +97,42 @@ if [[ -n "${root:-}" ]]; then
   (( staged )) && flags+="+"
   (( modified )) && flags+="!"
   (( untracked )) && flags+="?"
-  parts+=("${magenta}${i_branch} ${branch}${reset}${flags:+ ${red}${flags}${reset}}")
+  parts+=("${magenta}${i_branch}${branch}${reset}${flags:+ ${red}${flags}${reset}}")
 fi
 
 # Model, effort, fast mode.
 if [[ -n "$model" ]]; then
-  segment="${blue}${i_model} ${model}${reset}"
+  segment="${blue}${i_model}${model}${reset}"
   [[ -n "$effort" ]] && segment+=" ${dim}${effort}${reset}"
   [[ "$fast" == "true" ]] && segment+=" ${yellow}${i_fast}${reset}"
   parts+=("$segment")
 fi
 
-[[ -n "$context" ]] && parts+=("$(level_color "$context")${i_context} ${context}%${reset}")
+[[ -n "$context" ]] && parts+=("$(level_color "$context")${i_context}${context}%${reset}")
 
 # Prompt cache: minutes until it expires; yellow under 10, red once cold.
 if [[ -n "$cache_warm" ]]; then
   left=0
   [[ "$cache_warm" == "true" && -n "$cache_expires" ]] && left=$(( (cache_expires - $(date +%s)) / 60 ))
   if (( left <= 0 )); then
-    parts+=("${red}${i_cache} cold${reset}")
+    parts+=("${red}${i_cache}cold${reset}")
   elif (( left < 10 )); then
-    parts+=("${yellow}${i_cache} ${left}m${reset}")
+    parts+=("${yellow}${i_cache}${left}m${reset}")
   else
-    parts+=("${green}${i_cache} ${left}m${reset}")
+    parts+=("${green}${i_cache}${left}m${reset}")
   fi
 fi
 
 # 5-hour usage; reset time once past half.
 if [[ -n "$usage_5h" ]]; then
-  segment="$(level_color "$usage_5h")${i_usage} ${usage_5h}%${reset}"
+  segment="$(level_color "$usage_5h")${i_usage}${usage_5h}%${reset}"
   (( usage_5h >= 50 )) && [[ -n "$reset_5h" ]] && segment+=" ${dim}↻$(clock "$reset_5h")${reset}"
   parts+=("$segment")
 fi
 
-(( added > 0 || removed > 0 )) && parts+=("${i_diff} ${green}+${added}${reset} ${red}−${removed}${reset}")
+(( added > 0 || removed > 0 )) && parts+=("${i_diff}${green}+${added}${reset} ${red}−${removed}${reset}")
 
-[[ -n "$cost" ]] && parts+=("${dim}${i_cost} $(printf '%.2f' "$cost")${reset}")
+[[ -n "$cost" ]] && parts+=("${dim}${i_cost}$(printf '%.2f' "$cost")${reset}")
 
 sep=" ${dim}·${reset} "
 out="${parts[0]}"
