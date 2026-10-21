@@ -1,0 +1,79 @@
+#!/usr/bin/env bash
+# Report each git repo under ~/Projects: age of last commit and unsaved work.
+# Lists stale projects (no commit in STALE_DAYS, default 90) with unsaved work
+# first: those need a retire-or-keep decision. Read-only.
+# Usage: get-project-status [--all] [root]
+
+set -euo pipefail
+
+show_all=false
+if [[ "${1:-}" == "--all" ]]; then
+  show_all=true
+  shift
+fi
+root="${1:-$HOME/Projects}"
+stale_days="${STALE_DAYS:-90}"
+now="$(date +%s)"
+
+if [[ -t 1 ]]; then
+  bold=$'\e[1m' dim=$'\e[2m' red=$'\e[31m' yellow=$'\e[33m' green=$'\e[32m' reset=$'\e[0m'
+else
+  bold="" dim="" red="" yellow="" green="" reset=""
+fi
+
+rows=""
+total=0 stale=0 at_risk=0
+for repo in "$root"/*/.git "$root"/*/*/.git; do
+  [[ -d "$repo" ]] || continue
+  dir="${repo%/.git}"
+  name="${dir#"$root"/}"
+  [[ "$name" == archived/* ]] && continue
+
+  last="$(git -C "$dir" log -1 --format=%ct 2>/dev/null || echo "$now")"
+  age=$(( (now - last) / 86400 ))
+  changed="$(git -C "$dir" --no-optional-locks status --porcelain 2>/dev/null | wc -l | tr -d ' ')"
+
+  unsaved=()
+  (( changed > 0 )) && unsaved+=("$changed changed")
+  if [[ -z "$(git -C "$dir" remote)" ]]; then
+    unsaved+=("no remote")
+  else
+    unpushed="$(git -C "$dir" log --branches --not --remotes --oneline 2>/dev/null | wc -l | tr -d ' ')"
+    (( unpushed > 0 )) && unsaved+=("$unpushed unpushed")
+  fi
+
+  if (( age <= 30 )); then state="active"
+  elif (( age <= stale_days )); then state="paused"
+  else state="stale"; stale=$(( stale + 1 ))
+  fi
+
+  risk=0
+  if (( ${#unsaved[@]} > 0 )); then
+    risk=1
+    [[ "$state" == "stale" ]] && at_risk=$(( at_risk + 1 ))
+  fi
+  total=$(( total + 1 ))
+
+  detail="$(IFS=,; echo "${unsaved[*]:-}")"
+  detail="${detail//,/, }"
+  priority=0
+  [[ "$state" == "stale" ]] && priority=$(( 1 + risk ))
+  rows+="${priority}"$'\t'"${age}"$'\t'"${state}"$'\t'"${name}"$'\t'"${detail}"$'\n'
+done
+
+echo "${bold}${total} repos in ${root/#$HOME/~}${reset}: ${stale} stale (no commit in ${stale_days}d), ${red}${at_risk} stale with unsaved work${reset}"
+echo
+
+printf "${dim}%-7s %5s  %-45s %s${reset}\n" "STATE" "AGE" "PROJECT" "UNSAVED"
+printf '%s' "$rows" | sort -t$'\t' -k1,1nr -k2,2nr | while IFS=$'\t' read -r priority age state name detail; do
+  [[ "$show_all" == false && "$state" != "stale" ]] && continue
+  case "$state" in
+    active) color="$green" ;;
+    paused) color="$yellow" ;;
+    *) color="$red" ;;
+  esac
+  printf "${color}%-7s${reset} %4sd  %-45s ${detail:+$red}%s${reset}\n" "$state" "$age" "$name" "$detail"
+done
+
+[[ "$show_all" == false ]] && echo && echo "${dim}Showing stale repos only; --all for everything.${reset}"
+exit 0

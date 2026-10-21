@@ -61,10 +61,21 @@ To re-generate profiles (e.g. after accounts are added/removed), just run `refre
 | `clean-package-cache` | Purge caches for npm, pip, uv, go, cargo, terraform, and more. Dry-run by default; `--force` to execute. |
 | `clean-claude-projects` | Prune Claude Code state for deleted projects. Dry-run by default; `--force` to apply. |
 | `clean-shell-cache` | Clear cached shell init scripts after upgrading starship, atuin, etc. |
+| `get-project-status` | List repos under `~/Projects` by last commit with unsaved work (changes, unpushed commits, no remote). Stale ones first; `--all` for everything. |
 | `get-claude-status` | Claude Code status line: directory, git, model and effort, context %, prompt cache time left, 5-hour usage, lines changed, cost. Nerd Font icons in Ghostty, text labels elsewhere; `CLAUDE_STATUS_ICONS=1` or `0` overrides. |
 | `dotfiles-env` | Detect environment (`DOTFILES_OS`, `DOTFILES_ENV`). Sourced by shell configs. |
 | `refresh-zorg-profiles` | Log into AWS SSO, enumerate org accounts, and regenerate `~/.aws/config`. |
 | `sync-claude-kit` | Push local claude-kit commits and refresh the installed `kit` plugin. |
+
+### Retiring a project
+
+Run `get-project-status` monthly. Any repo with no commit in 90 days gets a keep-or-retire decision. To retire one:
+
+1. Save work: commit leftovers to a `wip/retire` branch and push (create a private repo first if there is no remote).
+2. Tear down anything running: deployments, cloud resources, domains, API keys.
+3. Add an archived note to the README, then `gh repo archive` (personal repos).
+4. Delete the local clone; repos without a remote go to `~/Projects/archived/`.
+5. Run `clean-claude-projects --force` to drop its Claude Code state.
 
 Scripts use [gum](https://github.com/charmbracelet/gum) for styled output, spinners, and prompts when available, with plain-text fallbacks.
 
