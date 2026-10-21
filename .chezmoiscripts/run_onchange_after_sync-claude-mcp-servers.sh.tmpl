@@ -1,0 +1,17 @@
+#!/bin/bash
+set -euo pipefail
+
+# Register user-scope Claude Code MCP servers. Re-runs whenever this file changes.
+# No-op when the claude CLI is absent.
+command -v claude >/dev/null 2>&1 || exit 0
+
+add_server() {
+    local name="$1" json="$2"
+    claude mcp remove --scope user "$name" >/dev/null 2>&1 || true
+    claude mcp add-json --scope user "$name" "$json" >/dev/null
+    echo "Registered user MCP server: $name"
+}
+
+{{ if eq .chezmoi.os "darwin" -}}
+add_server chrome-devtools '{"type":"stdio","command":"pnpm","args":["dlx","chrome-devtools-mcp@latest","--autoConnect","--userDataDir","{{ .chezmoi.homeDir }}/Library/Application Support/Microsoft Edge"],"env":{}}'
+{{ end -}}
