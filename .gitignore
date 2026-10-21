@@ -6,7 +6,6 @@
 private_dot_config/espanso/match/personal.yml
 
 # Secret files that should never be committed
-*.age
 *.asc
 key.txt
 **/hosts.yml

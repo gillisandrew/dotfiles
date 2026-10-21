@@ -1,0 +1,6 @@
+{{- /* Private Claude config (about-me text, autoMode trust, personal plugins), age-encrypted in .private/. Emits {} on machines without the age key. */ -}}
+{{- if stat (joinPath .chezmoi.homeDir ".config/chezmoi/key.txt") -}}
+{{-   include ".private/claude.json.age" | decrypt -}}
+{{- else -}}
+{}
+{{- end -}}

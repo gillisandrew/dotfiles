@@ -1,5 +1,12 @@
+{{- $private := includeTemplate "claude-private" . | fromJson -}}
 # Global preferences
 
+{{ with get $private "aboutMe" -}}
+## About me
+
+{{ . }}
+
+{{ end -}}
 ## Questions and decisions
 
 - Ask questions with the AskUserQuestion tool, never as lists in prose. This includes grilling and interview skills.

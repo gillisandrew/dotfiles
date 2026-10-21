@@ -1,5 +1,6 @@
 #!/bin/sh
-# Merge the tracked base (.chezmoitemplates/claude-settings.json) into the live
+# Merge the tracked base (.chezmoitemplates/claude-settings.json), overlaid with
+# private settings from Bitwarden (.chezmoitemplates/claude-private), into the live
 # ~/.claude/settings.json without clobbering keys Claude Code writes itself.
 #   - top-level scalars/lists: base wins
 #   - top-level objects: merged one level deep, base wins per key
@@ -23,7 +24,13 @@ base=$(cat <<'EOF'
 EOF
 )
 
-printf '%s' "$live" | jq --argjson base "$base" '
+private=$(cat <<'EOF'
+{{ includeTemplate "claude-private" . }}
+EOF
+)
+
+printf '%s' "$live" | jq --argjson base "$base" --argjson private "$private" '
+  ($base * ($private.settings // {})) as $base |
   reduce ($base | to_entries[]) as {key: $k, value: $v} (.;
     if (.[$k] | type) == "object" and ($v | type) == "object" then
       .[$k] |= reduce ($v | to_entries[]) as {key: $sk, value: $sv} (.;
