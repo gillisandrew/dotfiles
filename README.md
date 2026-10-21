@@ -73,9 +73,9 @@ Run `get-project-status` monthly. Any repo with no commit in 90 days gets a keep
 
 1. Save work: commit leftovers to a `wip/retire` branch and push (create a private repo first if there is no remote).
 2. Tear down anything running: deployments, cloud resources, domains, API keys.
-3. Add an archived note to the README, then `gh repo archive` (personal repos).
-4. Delete the local clone; repos without a remote go to `~/Projects/archived/`.
-5. Run `clean-claude-projects --force` to drop its Claude Code state.
+3. Add an archived note to the README, then `gh repo archive` (personal repos). First check that no other local clone shares the remote; if one does, delete only this clone.
+4. Delete the local clone; repos without a remote go to `~/Projects/archived/`. For clones of third-party repos, copy your own files to `~/Projects/archived/<name>-salvage/` first.
+5. Quit all Claude Code sessions, then run `clean-claude-projects --force` to drop its Claude Code state.
 
 Scripts use [gum](https://github.com/charmbracelet/gum) for styled output, spinners, and prompts when available, with plain-text fallbacks.
 
