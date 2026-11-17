@@ -13,5 +13,5 @@ add_server() {
 }
 
 {{ if eq .chezmoi.os "darwin" -}}
-add_server chrome-devtools '{"type":"stdio","command":"pnpm","args":["dlx","chrome-devtools-mcp@latest","--autoConnect","--userDataDir","{{ .chezmoi.homeDir }}/Library/Application Support/Microsoft Edge"],"env":{}}'
+add_server chrome-devtools '{"type":"stdio","command":"pnpm","args":["dlx","chrome-devtools-mcp@latest","--executablePath","/Applications/Helium.app/Contents/MacOS/Helium","--userDataDir","{{ .chezmoi.homeDir }}/.cache/chrome-devtools-mcp/helium-profile"],"env":{}}'
 {{ end -}}
