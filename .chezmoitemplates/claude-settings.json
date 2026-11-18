@@ -44,6 +44,7 @@
     "kit@claude-kit": true
   },
   "autoUpdatesChannel": "latest",
+  "cleanupPeriodDays": 90,
   "tui": "fullscreen",
   "voice": { "enabled": true, "mode": "hold" },
   "preferredNotifChannel": "ghostty",

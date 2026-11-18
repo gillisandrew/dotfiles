@@ -17,7 +17,7 @@ if pgrep -f '(^|/)claude( |$)' >/dev/null 2>&1; then
 fi
 
 FORCE="$FORCE" SESSIONS_OPEN="$SESSIONS_OPEN" python3 -I - <<'EOF'
-import glob, json, os, shutil, time
+import glob, json, os, re, shutil, time
 
 force = os.environ["FORCE"] == "true"
 sessions_open = os.environ["SESSIONS_OPEN"] == "true"
@@ -40,17 +40,19 @@ def recorded_cwd(project_dir):
                     return cwd
     return None
 
+with open(config_path) as fh:
+    config = json.load(fh)
+live_names = {re.sub(r"[^A-Za-z0-9]", "-", p) for p in config.get("projects", {}) if os.path.isdir(p)}
+
 stale_dirs = []
 for name in sorted(os.listdir(projects_root)):
     path = os.path.join(projects_root, name)
-    if not os.path.isdir(path) or name.startswith("ssh-"):
+    if not os.path.isdir(path) or name.startswith("ssh-") or name in live_names:
         continue
     cwd = recorded_cwd(path)
     if cwd and not os.path.isdir(cwd):
         stale_dirs.append((name, cwd))
 
-with open(config_path) as fh:
-    config = json.load(fh)
 stale_entries = [p for p in config.get("projects", {}) if not os.path.isdir(p)]
 
 print(f"Transcript folders for deleted projects: {len(stale_dirs)}")
