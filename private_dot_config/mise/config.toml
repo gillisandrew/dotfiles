@@ -12,6 +12,7 @@ uv = "latest"
 # CLI tools
 actionlint = "latest"
 fd = "latest"
+fnox = { version = "latest", workflow = "release.yml" }
 gitleaks = "latest"
 jq = "latest"
 opentofu = "latest"

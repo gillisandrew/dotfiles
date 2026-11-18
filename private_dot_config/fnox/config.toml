@@ -1,0 +1,8 @@
+[providers.kc]
+type = "keychain"
+service = "fnox"
+
+[secrets]
+NPM_TOKEN= { provider = "kc", value = "NPM_TOKEN", description = "npm publish token" }
+TF_TOKEN_app_terraform_io= { provider = "kc", value = "TF_TOKEN_app_terraform_io", description = "Terraform Cloud token" }
+HA_TOKEN= { provider = "kc", value = "HA_TOKEN", description = "Home Assistant MCP (toasteroven)" }

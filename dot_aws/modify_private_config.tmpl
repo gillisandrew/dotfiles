@@ -21,3 +21,14 @@ sso_start_url = {{ .aws.sso_start_url }}
 ; Run 'refresh-zorg-profiles' to populate SSO account profiles.
 EOF
 fi
+{{- if eq .chezmoi.os "darwin" }}
+
+if ! printf '%s\n' "$contents" | grep -q '^\[profile gillisandrew\]'; then
+  cat <<'EOF'
+
+[profile gillisandrew]
+credential_process = sh -c 'exec "$HOME/.local/share/mise/shims/fnox" get AWS_CREDS_GILLISANDREW'
+region = us-east-1
+EOF
+fi
+{{- end }}
