@@ -1,0 +1,6 @@
+#!/bin/sh
+set -eu
+[ -n "${HOME:-}" ] || HOME=$(/usr/bin/dscl . -read "/Users/$(/usr/bin/id -un)" NFSHomeDirectory | /usr/bin/awk '{print $2}')
+export HOME
+token=$("$HOME/.local/share/mise/shims/fnox" get HA_TOKEN)
+printf '{"Authorization":"Bearer %s"}\n' "$token"

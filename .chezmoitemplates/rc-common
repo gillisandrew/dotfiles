@@ -57,6 +57,9 @@ _cached_init() {
   source "$cache"
 }
 
+terraform() { TF_TOKEN_app_terraform_io="$(fnox get TF_TOKEN_app_terraform_io)" command terraform "$@"; }
+tofu() { TF_TOKEN_app_terraform_io="$(fnox get TF_TOKEN_app_terraform_io)" command tofu "$@"; }
+
 # CLAUDE EXPERIMENTAL FLAGS
 export CLAUDE_CODE_FORK_SUBAGENT=1
 export CLAUDE_CODE_ENABLE_FUNCTION_HOOKS=1
