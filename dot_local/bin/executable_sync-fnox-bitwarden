@@ -221,7 +221,7 @@ def scope_of(cfg):
     if cfg == global_cfg:
         return "fnox/global"
     rel = os.path.relpath(os.path.dirname(cfg), os.environ["PROJECTS_DIR"])
-    return "fnox/" + rel
+    return "fnox/" + rel + (":local" if ".local." in os.path.basename(cfg) else "")
 
 def find_note(name):
     items = json.loads(bw("list", "items", "--search", name))
@@ -230,7 +230,8 @@ def find_note(name):
 if mode == "backup":
     cfg = sys.argv[2]
     secrets = tomllib.load(open(cfg, "rb")).get("secrets", {})
-    providers = {k: v["provider"] for k, v in secrets.items() if isinstance(v, dict) and v.get("provider")}
+    refs = {k: {"provider": v["provider"], "value": v.get("value", k)} for k, v in secrets.items() if isinstance(v, dict) and v.get("provider")}
+    providers = {k: r["provider"] for k, r in refs.items()}
     if not providers:
         print(f"  – {scope_of(cfg)}: no provider-backed secrets, skipped")
         sys.exit(0)
@@ -239,7 +240,7 @@ if mode == "backup":
     if r.returncode != 0:
         sys.exit(f"fnox export failed in {cwd}: {r.stderr.strip()[:200]}")
     values = json.loads(r.stdout)["secrets"]
-    meta = {"config": cfg.replace(home, "~", 1), "providers": providers}
+    meta = {"config": cfg.replace(home, "~", 1), "providers": providers, "secrets": refs, "config_text": open(cfg).read()}
     fields = [{"name": k, "value": values[k], "type": 1, "linkedId": None} for k in providers]
     name = scope_of(cfg)
     existing = find_note(name)
@@ -274,9 +275,15 @@ elif mode == "restore":
     if not os.path.isdir(cwd):
         print(f"  – {name}: {meta.get('config')} not on this machine, skipped")
         sys.exit(0)
+    if not os.path.exists(cfg) and meta.get("config_text"):
+        os.makedirs(os.path.dirname(cfg), exist_ok=True)
+        open(cfg, "w").write(meta["config_text"])
+        print(f"  ✓ {name}: recreated {meta.get('config')}")
+    refs = meta.get("secrets") or {k: {"provider": v, "value": k} for k, v in meta.get("providers", {}).items()}
     for f in item.get("fields") or []:
-        prov = meta.get("providers", {}).get(f["name"], "kc")
-        cmd = ["fnox", "set", f["name"], "-p", prov] + (["-g"] if is_global else [])
+        ref = refs.get(f["name"], {"provider": "kc", "value": f["name"]})
+        scope = ["set", "-g"] if is_global else ["-c", os.path.basename(cfg), "set"]
+        cmd = ["fnox", *scope, f["name"], "-p", ref["provider"], "-k", ref["value"]]
         r = subprocess.run(cmd, cwd=cwd, input=f["value"], capture_output=True, text=True)
         print(f"  {'✓' if r.returncode == 0 else '✗'} {name}: {f['name']}" + ("" if r.returncode == 0 else f" ({r.stderr.strip()[:120]})"))
 PY
@@ -336,7 +343,7 @@ else
   [[ -f "$FNOX_GLOBAL" ]] && configs+=("$FNOX_GLOBAL")
   if [[ -d "$PROJECTS_DIR" ]]; then
     while IFS= read -r -d '' f; do configs+=("$f"); done < <(
-      find "$PROJECTS_DIR" -maxdepth 5 \( -name node_modules -o -name .git -o -name vendor \) -prune -o -name fnox.toml -print0 2>/dev/null)
+      find "$PROJECTS_DIR" -maxdepth 5 \( -name node_modules -o -name .git -o -name vendor \) -prune -o \( -name fnox.toml -o -name .fnox.toml -o -name fnox.local.toml -o -name .fnox.local.toml \) -print0 2>/dev/null)
   fi
   say "Found ${#configs[@]} fnox config(s):"
   for f in ${configs[@]+"${configs[@]}"}; do note "  ${f/#$HOME/~}"; done
