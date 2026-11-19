@@ -44,8 +44,7 @@
     "decision-tree@claude-code-mods": true,
     "diagram-pane@claude-code-mods": true,
     "kit@claude-kit": true,
-    "cloudflare@cloudflare": true,
-    "typescript-lsp@claude-plugins-official": true
+    "cloudflare@cloudflare": true
   },
   "autoUpdatesChannel": "latest",
   "cleanupPeriodDays": 90,

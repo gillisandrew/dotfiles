@@ -23,7 +23,6 @@ terraform = "latest"
 yq = "latest"
 godot = "4.7.2-stable"
 "npm:typescript" = "latest"
-"npm:typescript-language-server" = "latest"
 
 [settings]
 npm.package_manager = "pnpm"
