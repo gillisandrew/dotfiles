@@ -60,6 +60,25 @@ _cached_init() {
 terraform() { TF_TOKEN_app_terraform_io="$(fnox get TF_TOKEN_app_terraform_io)" command terraform "$@"; }
 tofu() { TF_TOKEN_app_terraform_io="$(fnox get TF_TOKEN_app_terraform_io)" command tofu "$@"; }
 
+alias fnx='fnox exec --'
+dev() {
+  local run=()
+  if [ -f composer.json ] && jq -e '.scripts.dev' composer.json >/dev/null 2>&1; then
+    run=(composer run dev)
+  elif [ -f package.json ] && jq -e '.scripts.dev' package.json >/dev/null 2>&1; then
+    run=(pnpm dev)
+  else
+    echo "dev: no dev script in composer.json or package.json; use: fnx <command>" >&2
+    return 1
+  fi
+  if fnox config-files 2>/dev/null | grep -qv '/\.config/fnox/config\.toml$'; then
+    echo "dev: ${run[*]} (with fnox secrets)" >&2
+    fnox exec -- "${run[@]}" "$@"
+  else
+    "${run[@]}" "$@"
+  fi
+}
+
 # CLAUDE EXPERIMENTAL FLAGS
 export CLAUDE_CODE_FORK_SUBAGENT=1
 export CLAUDE_CODE_ENABLE_FUNCTION_HOOKS=1
