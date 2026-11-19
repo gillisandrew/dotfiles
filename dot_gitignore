@@ -5,3 +5,6 @@
 # fnox per-machine secret refs
 fnox.local.toml
 .fnox.local.toml
+
+# Per-machine agent instructions
+CLAUDE.local.md
