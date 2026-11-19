@@ -13,7 +13,8 @@
     "defaultMode": "auto",
     "blockReadsOutsideWorkingDirectories": false,
     "allow": [
-      "Bash(gh api:*)",
+      "Bash(gh api --method GET *)",
+      "Bash(gh api -X GET *)",
       "Bash(git add *)",
       "Bash(git commit *)",
       "Bash(vp check *)",
