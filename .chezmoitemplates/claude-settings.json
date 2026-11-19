@@ -2,7 +2,8 @@
   "$schema": "https://json.schemastore.org/claude-code-settings.json",
   "model": "opus",
   "env": {
-    "DISABLE_ZOXIDE": "1"
+    "DISABLE_ZOXIDE": "1",
+    "CLAUDE_CODE_SHELL": "{{ if eq .chezmoi.os "darwin" }}/opt/homebrew/bin/bash{{ else }}/bin/bash{{ end }}"
   },
   "includeCoAuthoredBy": false,
   "statusLine": {

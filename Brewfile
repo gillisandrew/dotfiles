@@ -30,6 +30,7 @@ brew "yubico-piv-tool"
 
 # Dev
 brew "awscli"
+brew "bash"
 brew "bitwarden-cli"
 brew "caddy"
 brew "chezmoi"
