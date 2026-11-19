@@ -2,15 +2,17 @@ if [ "$DOTFILES_ENV" = "macos" ]; then
   [ -S "$HOME/.bitwarden-ssh-agent.sock" ] && export SSH_AUTH_SOCK="$HOME/.bitwarden-ssh-agent.sock"
 fi
 
-[ "$(command -v curlie)" ] && alias curl="curlie"
-[ "$(command -v bat)" ] && alias cat="bat"
+if [ -z "$CLAUDECODE" ]; then
+  [ "$(command -v curlie)" ] && alias curl="curlie"
+  [ "$(command -v bat)" ] && alias cat="bat"
+  alias ls='ls --color=auto'
+fi
 
 alias ..='cd ..'
 alias ...='cd ../..'
 export CLICOLOR=1
 export LSCOLORS=ExFxCxDxBxegedabagacad
 
-alias ls='ls --color=auto -G'
 alias la='ls -la'
 
 alias c='claude --model opus'
@@ -81,7 +83,7 @@ dev() {
 
 # CLAUDE EXPERIMENTAL FLAGS
 export CLAUDE_CODE_ENABLE_FUNCTION_HOOKS=1
-[ -z "$DISABLE_MISE" ] && [ "$(command -v mise)" ] && _cached_init mise.{{ . }} mise activate {{ . }}
+[ -z "$DISABLE_MISE" ] && [ "$(command -v mise)" ] && eval "$(mise activate {{ . }})"
 if [ -z "$CLAUDECODE" ]; then
   [ -z "$DISABLE_FNOX" ] && [ "$(command -v fnox)" ] && _cached_init fnox.{{ . }} fnox activate {{ . }}
   [ -z "$DISABLE_CARAPACE" ] && [ "$(command -v carapace)" ] && _cached_init carapace.{{ . }} carapace _carapace {{ . }}
