@@ -13,3 +13,8 @@ key_file = "~/.config/fnox/age-se.txt"
 [mcp]
 tools = ["exec"]
 redact_output = true
+
+[daemon]
+enabled = true
+cache_ttl = "2h"
+max_cache_ttl = "8h"

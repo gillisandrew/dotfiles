@@ -23,6 +23,19 @@
       "Bash(vp test *)",
       "Bash(vp lint *)",
       "Bash(node_modules/.bin/playwright test *)"
+    ],
+    "deny": [
+      "Bash(fnox get *)",
+      "Bash(fnox * get *)",
+      "Bash(fnox export *)",
+      "Bash(fnox * export *)",
+      "Bash(fnox ex *)",
+      "Bash(fnox env *)",
+      "Bash(fnox * env *)",
+      "Bash(fnox edit *)",
+      "Bash(fnox * edit *)",
+      "Bash(fnox list --values*)",
+      "Bash(fnox tui*)"
     ]
   },
   "extraKnownMarketplaces": {
