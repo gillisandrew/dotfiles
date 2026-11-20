@@ -1,9 +1,10 @@
+import = ["~/.config/fnox/local.toml"]
+
 [providers.kc]
 type = "keychain"
 service = "fnox"
 
-[secrets]
-NPM_TOKEN= { provider = "kc", env = false, value = "NPM_TOKEN", description = "npm publish token" }
-TF_TOKEN_app_terraform_io= { provider = "kc", env = false, value = "TF_TOKEN_app_terraform_io", description = "Terraform Cloud token" }
-HA_TOKEN= { provider = "kc", env = false, value = "HA_TOKEN", description = "Home Assistant MCP (toasteroven)" }
-AWS_CREDS_GILLISANDREW= { provider = "kc", env = false, value = "AWS_CREDS_GILLISANDREW", description = "credential_process JSON for aws profile gillisandrew (IAM user ag-mackbook-1-user, acct 935837448127)" }
+[providers.sync-age]
+type = "age"
+recipients = ["age1se1q0eerqr8cmhadmj7mjknh5j5t5wld98c0ucvr6mf5x8a94eppfdd69l3zq7"]
+key_file = "~/.config/fnox/age-se.txt"
