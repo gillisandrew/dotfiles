@@ -55,6 +55,8 @@ brew "pre-commit"
 brew "typescript"
 
 # Apps
+cask "1password"
+cask "1password-cli"
 cask "anki"
 cask "bitwarden"
 cask "caffeine"
