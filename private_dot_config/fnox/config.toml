@@ -1,3 +1,4 @@
+env = "exec"
 import = ["~/.config/fnox/local.toml"]
 
 [providers.kc]
