@@ -12,6 +12,8 @@ add_server() {
     echo "Registered user MCP server: $name"
 }
 
+add_server fnox '{"type":"stdio","command":"fnox","args":["mcp"],"env":{}}'
+
 {{ if eq .chezmoi.os "darwin" -}}
 add_server chrome-devtools '{"type":"stdio","command":"pnpm","args":["dlx","chrome-devtools-mcp@latest","--executablePath","/Applications/Helium.app/Contents/MacOS/Helium","--userDataDir","{{ .chezmoi.homeDir }}/.cache/chrome-devtools-mcp/helium-profile"],"env":{}}'
 {{ end -}}

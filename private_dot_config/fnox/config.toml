@@ -8,3 +8,7 @@ service = "fnox"
 type = "age"
 recipients = ["age1se1q0eerqr8cmhadmj7mjknh5j5t5wld98c0ucvr6mf5x8a94eppfdd69l3zq7"]
 key_file = "~/.config/fnox/age-se.txt"
+
+[mcp]
+tools = ["exec"]
+redact_output = true
