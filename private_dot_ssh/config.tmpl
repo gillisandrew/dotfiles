@@ -34,9 +34,9 @@ Host *
     IdentitiesOnly yes
 {{- if eq .chezmoi.os "darwin" }}
 
-    # Bitwarden Desktop SSH agent — explicit socket so we don't depend on
-    # SSH_AUTH_SOCK env-var inheritance (which breaks for git's child shells)
-    IdentityAgent ~/.bitwarden-ssh-agent.sock
+    # 1Password SSH agent, via a symlink without spaces; explicit so git's child
+    # shells don't depend on SSH_AUTH_SOCK inheritance
+    IdentityAgent ~/.1password/agent.sock
 
     # Default identity (override per-host if needed)
     IdentityFile ~/.ssh/BW-2026-02-10-AUTH.pub
@@ -71,4 +71,6 @@ Host *
     # Log level (raise to DEBUG temporarily if troubleshooting)
     LogLevel VERBOSE
 
-
+Host billing-ssh.agillis.dev
+  User admin
+  ProxyCommand cloudflared access ssh --hostname %h
