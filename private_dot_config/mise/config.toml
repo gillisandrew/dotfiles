@@ -13,7 +13,6 @@ uv = "latest"
 actionlint = "latest"
 fd = "latest"
 fnox = { version = "latest", workflow = "release.yml" }
-"github:remko/age-plugin-se" = "latest"
 gitleaks = "latest"
 jq = "latest"
 opentofu = "latest"
