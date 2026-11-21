@@ -66,7 +66,6 @@ To re-generate profiles (e.g. after accounts are added/removed), just run `refre
 | `dotfiles-env` | Detect environment (`DOTFILES_OS`, `DOTFILES_ENV`). Sourced by shell configs. |
 | `refresh-zorg-profiles` | Log into AWS SSO, enumerate org accounts, and regenerate `~/.aws/config`. |
 | `sync-claude-kit` | Push local claude-kit commits and refresh the installed `kit` plugin. |
-| `sync-fnox-bitwarden` | Wizard: back up fnox Keychain secrets to Bitwarden secure notes (`fnox/global`, `fnox/<org>/<project>`), or restore them on a new machine. |
 
 ### Retiring a project
 
@@ -168,8 +167,4 @@ git add -A && git commit -m "update zshrc" && git push
 chezmoi update
 ```
 
-On a new machine, restore Keychain secrets after `chezmoi apply`:
-
-```bash
-sync-fnox-bitwarden   # choose "restore"
-```
+On a new machine, fnox reads secrets from 1Password (vault `Dev`, items `fnox-<project>`). After `chezmoi apply`, sign in to the 1Password app and enable Settings → Developer → Integrate with 1Password CLI.
