@@ -68,28 +68,49 @@ ZSHENV
 fi
 
 # --- Restore age key (decrypts private config in .private/) ---
-# From $CHEZMOI_AGE_KEY (devcontainer/Codespaces secret), else Bitwarden when interactive.
+# From $CHEZMOI_AGE_KEY (devcontainer/Codespaces secret), else 1Password when
+# interactive on macOS (Bitwarden only as a fallback if bw is already installed).
 # Without it, chezmoi applies the public config only.
 age_key="$HOME/.config/chezmoi/key.txt"
+op_ref="op://Personal/chezmoi age key/content"
+save_age_key() {
+  local tmp
+  tmp="$(mktemp)"; chmod 600 "$tmp"
+  cat > "$tmp"
+  if grep -q '^AGE-SECRET-KEY-' "$tmp"; then
+    mv "$tmp" "$age_key"
+    return 0
+  fi
+  rm -f "$tmp"
+  return 1
+}
 if [ -f "$age_key" ]; then
   echo "==> age key already present"
 else
   mkdir -p "$(dirname "$age_key")"
-  if [ -z "${CHEZMOI_AGE_KEY:-}" ] && [ -t 0 ] && [ "$DOTFILES_OS" = "macos" ] && ! command -v bw >/dev/null 2>&1; then
-    echo "==> Installing Bitwarden CLI..."
-    HOMEBREW_NO_ENV_HINTS=1 brew install bitwarden-cli
+  if [ -z "${CHEZMOI_AGE_KEY:-}" ] && [ -t 0 ] && [ "$DOTFILES_OS" = "macos" ] && ! command -v op >/dev/null 2>&1; then
+    echo "==> Installing 1Password and its CLI..."
+    HOMEBREW_NO_ENV_HINTS=1 brew install --cask 1password 1password-cli
+    echo "    Open 1Password, sign in, and enable Settings > Developer > Integrate with 1Password CLI."
+    printf '    Press Enter when done... '; read -r _
   fi
   if [ -n "${CHEZMOI_AGE_KEY:-}" ]; then
-    (umask 077; printf '%s\n' "$CHEZMOI_AGE_KEY" > "$age_key")
-    echo "==> Restored age key from CHEZMOI_AGE_KEY"
+    printf '%s\n' "$CHEZMOI_AGE_KEY" | save_age_key && echo "==> Restored age key from CHEZMOI_AGE_KEY"
+  elif [ -t 0 ] && command -v op >/dev/null 2>&1; then
+    echo "==> Restoring age key from 1Password..."
+    if op read "$op_ref" | save_age_key; then
+      echo "==> Restored age key from 1Password"
+    else
+      echo "==> Could not read the age key from 1Password ($op_ref); private config skipped"
+    fi
   elif [ -t 0 ] && command -v bw >/dev/null 2>&1; then
-    echo "==> Restoring age key from Bitwarden..."
+    echo "==> Restoring age key from Bitwarden (fallback)..."
     bw login --check >/dev/null 2>&1 || bw login
     BW_SESSION="$(bw unlock --raw)"
-    (umask 077; bw get notes "chezmoi age key" --session "$BW_SESSION" > "$age_key")
+    bw get notes "chezmoi age key" --session "$BW_SESSION" | save_age_key || echo "==> Bitwarden note did not contain an age key"
     bw lock >/dev/null
   else
-    echo "==> No age key (set CHEZMOI_AGE_KEY or install bw); private config skipped"
+    echo "==> No age key (set CHEZMOI_AGE_KEY or sign in to 1Password); private config skipped"
   fi
 fi
 
