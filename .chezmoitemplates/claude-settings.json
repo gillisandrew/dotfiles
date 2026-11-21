@@ -35,7 +35,23 @@
       "Bash(fnox edit *)",
       "Bash(fnox * edit *)",
       "Bash(fnox list --values*)",
-      "Bash(fnox tui*)"
+      "Bash(fnox tui*)",
+      "Bash(op read *)",
+      "Bash(op * read *)",
+      "Bash(op inject *)",
+      "Bash(op * inject *)",
+      "Bash(op document get *)",
+      "Bash(op * document get *)",
+      "Bash(op item get *--reveal*)",
+      "Bash(op * item get *--reveal*)",
+      "Bash(op item get *json*)",
+      "Bash(op * item get *json*)",
+      "Bash(op item get *--fields*)",
+      "Bash(op * item get *--fields*)",
+      "Bash(op environment *--reveal*)",
+      "Bash(op * environment *--reveal*)",
+      "Bash(op run *--no-masking*)",
+      "Bash(op * run *--no-masking*)"
     ]
   },
   "extraKnownMarketplaces": {
