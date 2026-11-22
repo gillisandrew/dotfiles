@@ -23,7 +23,7 @@
 - Personal repos (`origin` owned by `gillisandrew`): commit to main. Other repos, whatever folder they live in: branch from a freshly fetched `origin/main`.
 - `git fetch` before planning against a repo with a remote; local clones go stale.
 - Never use `--no-verify`; fix the hook failure. No history rewriting or destructive git without my approval.
-- Commit signing uses the Bitwarden SSH agent. If signing fails, check `ssh-add -l` — the vault is probably locked.
+- Commit signing uses 1Password (`op-ssh-sign`). If signing fails, 1Password is probably locked; unlock the app.
 
 ## Code
 
