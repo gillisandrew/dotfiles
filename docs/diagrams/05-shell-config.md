@@ -38,7 +38,7 @@ flowchart TD
         direction LR
         HB["Homebrew shellenv"]
         PA["PATH additions<br/>(go, pnpm, rust,<br/>~/.local/bin)"]
-        ED["EDITOR selection<br/>(vim over SSH,<br/>code locally)"]
+        ED["EDITOR selection<br/>(vim over SSH,<br/>zed locally)"]
     end
 
     RC --> rc_provides

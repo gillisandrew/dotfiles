@@ -60,7 +60,7 @@ matches:
           cmd: "openssl rand -base64 32 | sed 's/=*$//' | tr -d '\n'"
   - label: "Init Svelte"
     trigger: ":init-svelte"
-    replace: "pnpm dlx sv create . && pnpm install && code ."
+    replace: "pnpm dlx sv create . && pnpm install && zed ."
   - label: "Weather (wttr)"
     trigger: ":wttr"
     replace: "{{output}}"

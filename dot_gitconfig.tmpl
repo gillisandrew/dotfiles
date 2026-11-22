@@ -9,7 +9,7 @@
 [core]
 	excludesfile = {{ .chezmoi.homeDir }}/.gitignore
 	{{- if eq .chezmoi.os "darwin" }}
-	editor = "code --wait"
+	editor = "zed --wait"
 	{{- else if lookPath "zed" }}
 	editor = "zed --wait"
 	{{- else }}
@@ -53,7 +53,7 @@
 	algorithm = histogram  # Generally produces better diffs
 	colorMoved = default  # Highlight moved code blocks
 	{{- if eq .chezmoi.os "darwin" }}
-	tool = vscode
+	tool = zed
 	{{- end }}
 
 [alias]
@@ -68,8 +68,8 @@
 	# Show what's in this branch vs main
 	new = log main..HEAD --oneline
 {{- if eq .chezmoi.os "darwin" }}
-[difftool "vscode"]
-	cmd = "code --wait --diff  "
+[difftool "zed"]
+	cmd = "zed --wait --diff \"$LOCAL\" \"$REMOTE\""
 {{- end }}
 [gpg "ssh"]
 	allowedSignersFile = {{ .chezmoi.homeDir }}/.ssh/allowed_signers
