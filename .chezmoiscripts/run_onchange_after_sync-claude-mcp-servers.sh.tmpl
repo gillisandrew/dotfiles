@@ -14,6 +14,10 @@ add_server() {
 
 add_server fnox '{"type":"stdio","command":"fnox","args":["mcp"],"env":{}}'
 
+if command -v 1password-mcp >/dev/null 2>&1; then
+    add_server 1password '{"type":"stdio","command":"1password-mcp","args":[],"env":{}}'
+fi
+
 {{ if eq .chezmoi.os "darwin" -}}
 add_server chrome-devtools '{"type":"stdio","command":"pnpm","args":["dlx","chrome-devtools-mcp@latest","--executablePath","/Applications/Helium.app/Contents/MacOS/Helium","--userDataDir","{{ .chezmoi.homeDir }}/.cache/chrome-devtools-mcp/helium-profile"],"env":{}}'
 {{ end -}}
