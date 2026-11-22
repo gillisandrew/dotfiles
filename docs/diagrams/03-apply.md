@@ -6,7 +6,6 @@ Idempotent — safe to run repeatedly. Renders templates, syncs files, and runs 
 flowchart TD
     subgraph data ["Template Data Sources"]
         TD1["chezmoi.toml<br/>.email, .aws.*, .sentry.*, .codespaces"]
-        TD2[".chezmoidata/vscode.yaml<br/>.vscode.extensions, .vscode.profiles"]
         TD3["Built-in variables<br/>.chezmoi.os, .chezmoi.arch,<br/>.chezmoi.homeDir, .chezmoi.sourceDir"]
     end
 
